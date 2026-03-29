@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>007 Nutrition System v8.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #c9a84c;
+  --gold-dim: #7a5f25;
+  --black: #0a0a0c;
+  --panel: #111115;
+  --card: #18181e;
+  --border: #2a2a35;
+  --text: #d8d8e0;
+  --muted: #5a5a6e;
+  --green: #3dba6e;
+  --red: #cc3d3d;
+  --blue: #3d8acc;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--black); color: var(--text); min-height: 100vh; }
+
+/* HEADER */
+.header { text-align: center; padding: 32px 20px 20px; border-bottom: 1px solid var(--border); position: relative; }
+.header-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.2rem,5vw,4rem); letter-spacing: 8px; color: #fff; line-height: 1; }
+.header-sub { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); letter-spacing: 4px; margin-top: 6px; text-transform: uppercase; }
+.gold-line { width: 60px; height: 2px; background: var(--gold); margin: 14px auto 0; }
+
+/* ALERT BANNER */
+.alert-banner { background: linear-gradient(90deg, rgba(201,168,76,0.08), rgba(201,168,76,0.04)); border: 1px solid var(--gold-dim); border-left: 3px solid var(--gold); margin: 20px; border-radius: 6px; padding: 14px 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 10px; }
+.alert-item { display: flex; gap: 10px; align-items: flex-start; font-size: 0.8rem; line-height: 1.5; }
+.alert-icon { color: var(--gold); font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+.alert-text strong { color: var(--gold); display: block; font-family: 'DM Mono', monospace; font-size: 0.65rem; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px; }
+
+/* TABS */
+.tabs-wrapper { padding: 0 20px; margin-bottom: 20px; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tab-btn { font-family: 'DM Mono', monospace; font-size: 0.72rem; letter-spacing: 1px; text-transform: uppercase; background: var(--card); color: var(--muted); border: 1px solid var(--border); padding: 10px 16px; cursor: pointer; border-radius: 4px; transition: all 0.2s; }
+.tab-btn:hover { border-color: var(--gold); color: var(--gold); }
+.tab-btn.active { background: var(--gold); color: #000; border-color: var(--gold); font-weight: 500; }
+.tab-btn.special { border-color: var(--green); color: var(--green); }
+.tab-btn.special:hover, .tab-btn.special.active { background: var(--green); color: #000; border-color: var(--green); }
+.tab-btn.grocery-tab { border-color: var(--blue); color: var(--blue); }
+.tab-btn.grocery-tab:hover, .tab-btn.grocery-tab.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+/* MAIN LAYOUT */
+.main-grid { display: grid; grid-template-columns: 340px 1fr; gap: 0; margin: 0 20px 20px; min-height: 700px; }
+@media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+
+/* MEAL LIST */
+.meal-list { border: 1px solid var(--border); border-radius: 8px 0 0 8px; overflow: hidden; }
+.day-theme { background: var(--card); border-bottom: 1px solid var(--border); padding: 14px 18px; }
+.day-theme-label { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; }
+.day-theme-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; letter-spacing: 3px; color: var(--gold); margin-top: 2px; }
+
+.meal-card { background: var(--panel); border-bottom: 1px solid var(--border); padding: 14px 18px; cursor: pointer; transition: all 0.15s; display: flex; gap: 12px; align-items: flex-start; }
+.meal-card:hover { background: var(--card); }
+.meal-card.selected { background: var(--card); border-left: 3px solid var(--gold); padding-left: 15px; }
+.meal-num { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: var(--border); line-height: 1; flex-shrink: 0; width: 28px; }
+.meal-card.selected .meal-num { color: var(--gold-dim); }
+.meal-info { flex-grow: 1; }
+.meal-time-label { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+.meal-name { font-size: 0.92rem; font-weight: 500; color: var(--text); margin-top: 3px; line-height: 1.3; }
+.meal-click { font-family: 'DM Mono', monospace; font-size: 0.58rem; color: var(--gold); letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
+
+/* RECIPE PANEL */
+.recipe-panel { border: 1px solid var(--border); border-left: none; border-radius: 0 8px 8px 0; overflow-y: auto; background: var(--panel); }
+.recipe-empty { display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column; gap: 12px; }
+.recipe-empty-icon { font-size: 2.5rem; opacity: 0.2; }
+.recipe-empty-text { font-family: 'DM Mono', monospace; font-size: 0.7rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+
+.recipe-header { background: var(--card); border-bottom: 1px solid var(--border); padding: 20px 24px; }
+.recipe-header-label { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+.recipe-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 3px; color: #fff; margin: 4px 0 6px; }
+.recipe-timing { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--gold); }
+.recipe-metric { display: inline-block; margin-top: 8px; background: rgba(61,138,204,0.1); border: 1px solid rgba(61,138,204,0.3); border-radius: 4px; padding: 4px 10px; font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--blue); letter-spacing: 1px; }
+
+.recipe-body { padding: 20px 24px; }
+
+/* INGREDIENTS */
+.section-label { font-family: 'DM Mono', monospace; font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); border-bottom: 1px solid var(--gold-dim); padding-bottom: 8px; margin-bottom: 14px; }
+.ingredients-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 28px; }
+@media (max-width: 1100px) { .ingredients-grid { grid-template-columns: 1fr; } }
+.ing-item { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 8px 12px; display: flex; gap: 10px; align-items: baseline; }
+.ing-amount { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--gold); font-weight: 500; flex-shrink: 0; min-width: 50px; }
+.ing-name { font-size: 0.85rem; color: var(--text); }
+.ing-note { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--muted); margin-left: auto; flex-shrink: 0; }
+
+/* STEPS */
+.steps-container { display: flex; flex-direction: column; gap: 14px; }
+.step-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.step-header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02); }
+.step-counter { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; color: var(--gold-dim); line-height: 1; width: 28px; flex-shrink: 0; }
+.step-emoji-icon { font-size: 1.1rem; flex-shrink: 0; }
+.step-title { font-family: 'DM Mono', monospace; font-size: 0.7rem; letter-spacing: 1.5px; text-transform: uppercase; color: #fff; font-weight: 500; }
+.step-body { padding: 14px 16px; }
+.step-text { font-size: 0.88rem; line-height: 1.6; color: var(--text); }
+.step-bullets { list-style: none; margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.step-bullets li { font-size: 0.85rem; color: var(--text); padding-left: 18px; position: relative; line-height: 1.5; }
+.step-bullets li::before { content: "→"; position: absolute; left: 0; color: var(--gold); font-size: 0.75rem; }
+.step-bullets li strong { color: var(--gold); }
+
+/* GROCERY VIEW */
+.grocery-view { margin: 0 20px 20px; }
+.grocery-controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; align-items: center; }
+.week-toggle { display: flex; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+.week-btn { font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 1px; background: var(--card); color: var(--muted); border: none; padding: 9px 16px; cursor: pointer; transition: all 0.2s; }
+.week-btn.active { background: var(--blue); color: #fff; }
+.grocery-note { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--muted); }
+
+/* STORE FILTER STRIP */
+.store-filter-bar { margin-bottom: 16px; }
+.store-filter-label { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.store-chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.store-chip { font-family: 'DM Mono', monospace; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.5px; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 2px solid transparent; transition: all 0.18s; user-select: none; opacity: 0.38; }
+.store-chip.on { opacity: 1; }
+.store-chip[data-store="Billa"]      { background: rgba(229,57,53,0.15);  border-color: rgba(229,57,53,0.4);  color: #ef9a9a; }
+.store-chip[data-store="Billa"].on   { background: rgba(229,57,53,0.28);  border-color: #ef5350; color: #fff; }
+.store-chip[data-store="Spar"]       { background: rgba(76,175,80,0.12);  border-color: rgba(76,175,80,0.35); color: #a5d6a7; }
+.store-chip[data-store="Spar"].on    { background: rgba(76,175,80,0.28);  border-color: #66bb6a; color: #fff; }
+.store-chip[data-store="Billa Plus"] { background: rgba(229,57,53,0.10);  border-color: rgba(229,57,53,0.3);  color: #ef9a9a; }
+.store-chip[data-store="Billa Plus"].on { background: rgba(229,57,53,0.22); border-color: #ef5350; color: #ffcdd2; }
+.store-chip[data-store="Hofer"]      { background: rgba(30,136,229,0.12); border-color: rgba(30,136,229,0.35);color: #90caf9; }
+.store-chip[data-store="Hofer"].on   { background: rgba(30,136,229,0.28); border-color: #42a5f5; color: #fff; }
+.store-chip[data-store="Lidl"]       { background: rgba(255,193,7,0.12);  border-color: rgba(255,193,7,0.35); color: #ffe082; }
+.store-chip[data-store="Lidl"].on    { background: rgba(255,193,7,0.28);  border-color: #ffca28; color: #fff; }
+.store-chip[data-store="Penny"]      { background: rgba(229,57,53,0.08);  border-color: rgba(229,57,53,0.25); color: #ffcdd2; }
+.store-chip[data-store="Penny"].on   { background: rgba(229,57,53,0.22);  border-color: #e53935; color: #fff; }
+.store-chip[data-store="dm"]         { background: rgba(255,87,34,0.12);  border-color: rgba(255,87,34,0.35); color: #ffab91; }
+.store-chip[data-store="dm"].on      { background: rgba(255,87,34,0.28);  border-color: #ff7043; color: #fff; }
+.store-chip[data-store="BiPA"]       { background: rgba(103,58,183,0.12); border-color: rgba(103,58,183,0.35);color: #ce93d8; }
+.store-chip[data-store="BiPA"].on    { background: rgba(103,58,183,0.28); border-color: #ab47bc; color: #fff; }
+.chip-all { font-family: 'DM Mono', monospace; font-size: 0.65rem; padding: 5px 11px; border-radius: 20px; cursor: pointer; border: 1px solid var(--border); color: var(--muted); background: var(--card); transition: all 0.18s; }
+.chip-all:hover { border-color: var(--gold); color: var(--gold); }
+
+/* STORE FILTER — row states */
+.tr-available { }
+.tr-missing { opacity: 0.35; }
+.tr-missing .td-item::after { content: " ⚠ NOT AT YOUR STORES"; font-family: "DM Mono", monospace; font-size: 0.58rem; color: #ff6b35; display: block; margin-top: 2px; letter-spacing: 0.5px; }
+.tr-missing td { text-decoration: line-through; text-decoration-color: rgba(255,107,53,0.4); }
+.tr-missing .td-item { text-decoration: none; }
+
+/* SHOPPING SUMMARY */
+.shop-summary { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 12px 16px; margin-bottom: 14px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+.shop-summary-stat { font-family: 'DM Mono', monospace; font-size: 0.7rem; }
+.shop-summary-stat span { color: var(--gold); font-size: 1rem; font-weight: 600; margin-right: 4px; }
+.shop-summary-stat.warn { }
+.shop-summary-stat.warn span { color: #ff6b35; }
+.shop-summary-label { font-size: 0.62rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+
+.grocery-category { margin-bottom: 20px; }
+.cat-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.cat-icon { font-size: 1.1rem; }
+.cat-title { font-family: 'Bebas Neue', sans-serif; letter-spacing: 3px; font-size: 1.1rem; color: var(--gold); }
+.cat-badge { font-family: 'DM Mono', monospace; font-size: 0.6rem; background: var(--card); border: 1px solid var(--border); border-radius: 3px; padding: 2px 8px; color: var(--muted); letter-spacing: 1px; }
+
+.grocery-table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; font-size: 0.82rem; }
+.grocery-table thead tr { background: var(--card); }
+.grocery-table th { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+.grocery-table td { padding: 9px 14px; border-bottom: 1px solid rgba(42,42,53,0.6); color: var(--text); vertical-align: top; }
+.grocery-table tr:last-child td { border-bottom: none; }
+.grocery-table tr:hover td { background: rgba(255,255,255,0.02); }
+.td-item { font-weight: 500; }
+.td-brand { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--blue); }
+.td-qty { font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--green); font-weight: 500; }
+.td-store { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--muted); }
+.td-storage { font-size: 0.78rem; color: var(--muted); }
+.badge-fresh { background: rgba(61,186,110,0.1); border: 1px solid rgba(61,186,110,0.3); border-radius: 3px; padding: 1px 6px; font-size: 0.6rem; font-family: 'DM Mono', monospace; color: var(--green); letter-spacing: 1px; display: inline-block; margin-top: 2px; }
+.badge-asian { background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.3); border-radius: 3px; padding: 1px 6px; font-size: 0.6rem; font-family: 'DM Mono', monospace; color: var(--gold); letter-spacing: 1px; display: inline-block; margin-top: 2px; }
+
+.hidden { display: none; }
+/* ─── EXPORT PANEL ─────────────────────────────────────────────── */
+.export-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.export-btn-main { font-family: "DM Mono", monospace; font-size: 0.72rem; letter-spacing: 1px; text-transform: uppercase; background: var(--gold); color: #000; border: none; padding: 9px 18px; border-radius: 4px; cursor: pointer; font-weight: 600; transition: all 0.2s; white-space: nowrap; }
+.export-btn-main:hover { background: #e6c558; }
+.export-count { font-family: "DM Mono", monospace; font-size: 0.65rem; color: var(--muted); }
+
+.export-panel { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 18px; margin-bottom: 14px; display: none; }
+.export-panel.open { display: block; }
+.export-panel-title { font-family: "DM Mono", monospace; font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 14px; }
+.export-options { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.export-opt-btn { font-family: "DM Mono", monospace; font-size: 0.7rem; letter-spacing: 0.5px; padding: 9px 16px; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); background: var(--panel); color: var(--muted); transition: all 0.18s; display: flex; align-items: center; gap: 7px; }
+.export-opt-btn:hover { border-color: var(--gold); color: var(--text); }
+.export-opt-btn.active-opt { border-color: var(--gold-dim); color: var(--text); }
+.export-opt-btn .exp-icon { font-size: 1.1rem; }
+.export-preview { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 14px; font-family: "DM Mono", monospace; font-size: 0.72rem; line-height: 1.7; color: var(--text); max-height: 280px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; margin-bottom: 12px; }
+.export-preview-label { font-family: "DM Mono", monospace; font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.export-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.exp-action-btn { font-family: "DM Mono", monospace; font-size: 0.68rem; letter-spacing: 0.5px; padding: 8px 16px; border-radius: 4px; cursor: pointer; border: 1px solid; transition: all 0.18s; font-weight: 500; }
+.exp-action-btn.copy    { background: rgba(201,168,76,0.12); border-color: var(--gold-dim); color: var(--gold); }
+.exp-action-btn.copy:hover    { background: rgba(201,168,76,0.25); }
+.exp-action-btn.whatsapp { background: rgba(37,211,102,0.1); border-color: rgba(37,211,102,0.4); color: #25d366; }
+.exp-action-btn.whatsapp:hover { background: rgba(37,211,102,0.2); }
+.exp-action-btn.email   { background: rgba(61,138,204,0.1); border-color: rgba(61,138,204,0.4); color: var(--blue); }
+.exp-action-btn.email:hover   { background: rgba(61,138,204,0.2); }
+.exp-action-btn.notes   { background: rgba(255,193,7,0.1); border-color: rgba(255,193,7,0.4); color: #ffc107; }
+.exp-action-btn.notes:hover   { background: rgba(255,193,7,0.2); }
+.exp-toast { font-family: "DM Mono", monospace; font-size: 0.7rem; color: var(--green); display: none; padding: 6px 0; }
+
+
+/* PROTEIN SAFETY NOTE */
+.safety-note { margin: 0 20px 14px; border: 1px solid #cc6b00; border-left: 3px solid #ff8800; border-radius: 8px; padding: 14px 18px; background: rgba(255,136,0,0.05); display: flex; gap: 12px; align-items: flex-start; }
+.safety-icon { font-size: 1.3rem; flex-shrink: 0; }
+.safety-title { font-family: "DM Mono", monospace; font-size: 0.72rem; letter-spacing: 1px; text-transform: uppercase; color: #ff8800; font-weight: 500; margin-bottom: 8px; }
+.safety-body { font-size: 0.8rem; color: var(--muted); line-height: 1.65; }
+.safety-body strong { color: var(--text); }
+
+/* DAILY TONIC BANNER */
+.tonic-banner { margin: 0 20px 14px; border: 1px solid var(--gold-dim); border-radius: 8px; overflow: hidden; }
+.tonic-header { display: flex; align-items: flex-start; gap: 12px; padding: 14px 18px; background: rgba(201,168,76,0.06); cursor: pointer; }
+.tonic-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+.tonic-title { font-family: "DM Mono", monospace; font-size: 0.72rem; letter-spacing: 1px; text-transform: uppercase; color: var(--gold); font-weight: 500; }
+.tonic-sub { font-size: 0.78rem; color: var(--muted); margin-top: 3px; }
+.tonic-toggle { margin-left: auto; flex-shrink: 0; background: var(--card); color: var(--gold); border: 1px solid var(--gold-dim); border-radius: 4px; padding: 6px 12px; font-family: "DM Mono", monospace; font-size: 0.65rem; letter-spacing: 1px; cursor: pointer; white-space: nowrap; }
+.tonic-body { padding: 16px 18px 18px; border-top: 1px solid var(--border); }
+.tonic-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; }
+@media (max-width: 800px) { .tonic-grid { grid-template-columns: 1fr; } }
+.tonic-protocol-title { font-family: "DM Mono", monospace; font-size: 0.68rem; letter-spacing: 1px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+.tonic-ing-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+.tonic-ing { font-size: 0.82rem; color: var(--text); display: flex; gap: 8px; }
+.tonic-amt { font-family: "DM Mono", monospace; font-size: 0.75rem; color: var(--gold); min-width: 56px; flex-shrink: 0; }
+.tonic-method { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+.tonic-method strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">PROJECT 007</div>
+  <div class="header-sub">Intelligence Nutrition System · Wiener Neustadt · 82kg · v8.0 Final</div>
+  <div class="gold-line"></div>
+</div>
+
+<div class="alert-banner">
+  <div class="alert-item"><span class="alert-icon">🚫</span><div class="alert-text"><strong>No Alcohol</strong>It suppresses REM sleep and blocks your body's deep repair cycle — full stop.</div></div>
+  <div class="alert-item"><span class="alert-icon">😴</span><div class="alert-text"><strong>20-Min Nap Rule</strong>Athlete's Nap after Meal 3. Set a timer. Over 20 min = deep sleep = grogginess.</div></div>
+  <div class="alert-item"><span class="alert-icon">☕</span><div class="alert-text"><strong>Morning Ritual</strong>1 glass water immediately on waking. 1 sugar-free espresso before training.</div></div>
+  <div class="alert-item"><span class="alert-icon">💧</span><div class="alert-text"><strong>Hydration Protocol</strong>Begin increasing water + electrolytes 14 days before any high-intensity phase.</div></div>
+</div>
+
+<div class="tonic-banner">
+  <div class="tonic-header">
+    <span class="tonic-icon">🧡</span>
+    <div>
+      <div class="tonic-title">Daily Anti-Inflammatory Protocol — Every Single Day</div>
+      <div class="tonic-sub">Waterson: "I encourage every actor to have daily shots of turmeric or ginger." This is not optional.</div>
+    </div>
+    <button class="tonic-toggle" onclick="toggleTonic(this)">Show Recipe ▾</button>
+  </div>
+  <div class="tonic-body" id="tonic-body" style="display:none">
+    <div class="tonic-grid">
+      <div class="tonic-protocol">
+        <div class="tonic-protocol-title">① Turmeric Tonic (Sarah Sugden's recipe)</div>
+        <div class="tonic-ing-list">
+          <div class="tonic-ing"><span class="tonic-amt">6 pcs</span> Fresh Turmeric root (each ≈2cm) — Billa Bio</div>
+          <div class="tonic-ing"><span class="tonic-amt">3 pcs</span> Fresh Ginger root — Billa Bio</div>
+          <div class="tonic-ing"><span class="tonic-amt">2</span> Lemons or Oranges (juice only)</div>
+          <div class="tonic-ing"><span class="tonic-amt">2 tbsp</span> Manuka or raw Honey — dm Bio</div>
+          <div class="tonic-ing"><span class="tonic-amt">3 pinches</span> Black Pepper — MANDATORY for absorption</div>
+        </div>
+        <div class="tonic-method">
+          <strong>Method:</strong> Don't peel roots — scrub clean, keep skin on. Blend everything in high-speed blender until smooth. Strain through a fine sieve. Take as a shot straight up, OR add ¾ tbsp to hot water for tea, OR add to sparkling water with ice and mint. Batch-make on Sunday for the whole week — stores in a sealed jar in the fridge for 7 days.
+        </div>
+      </div>
+      <div class="tonic-protocols-right">
+        <div class="tonic-protocol">
+          <div class="tonic-protocol-title">② Wheatgrass Shot</div>
+          <div class="tonic-method">20ml wheatgrass juice — dm Bio Weizengras Saft or powder form mixed in 50ml water. Take before breakfast. "Energy-providing, natural medicinal feel."</div>
+        </div>
+        <div class="tonic-protocol" style="margin-top:12px">
+          <div class="tonic-protocol-title">③ Lemon + Ginger Shot</div>
+          <div class="tonic-method">Juice of ½ lemon + 5g grated fresh ginger in 30ml warm water. Take with or after the turmeric tonic. Immune system boost — daily protocol.</div>
+        </div>
+        <div class="tonic-protocol" style="margin-top:12px">
+          <div class="tonic-protocol-title">④ Kefir (gut health)</div>
+          <div class="tonic-method">100ml Kefir — Billa Bio Kefir or dm Bio Kefir. Take with Meal 1 or Meal 3. "In addition to sauerkraut, I recommend kefir — any live probiotic source." — Waterson</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="safety-note">
+  <div class="safety-icon">⚠️</div>
+  <div class="safety-content">
+    <div class="safety-title">Protein Powder Safety — Read Before Buying</div>
+    <div class="safety-body">
+      A major Consumer Reports investigation (Oct 2025) tested 23 popular protein powders and found <strong>over two-thirds contained dangerous levels of lead</strong> — some by more than 10× the safe daily limit. Plant-based powders (pea, rice, hemp) averaged <strong>9× more lead than whey</strong>. BioTechUSA has not been independently certified for heavy metals.
+      <br><br>
+      <strong>What to buy instead:</strong><br>
+      🥇 <strong>Optimum Nutrition Gold Standard Whey Isolate</strong> (vanilla/unflavoured) — ranked safe by Consumer Reports AND Clean Label Project certified. Available at <strong>dm or BiPA</strong> in Austria.<br>
+      🥈 <strong>Layenberger LowCarb.one Whey</strong> — German brand, available at <strong>dm</strong>, independently tested.<br>
+      🌱 <strong>Wednesday only (Vegan day):</strong> Use <strong>Spar Free From Pea Protein</strong> — vanilla flavour only, never chocolate (chocolate = higher lead). Or skip powder and add an extra 50g of chickpeas + 20g hemp seeds to the meal instead.<br>
+      <br>
+      <strong>What to look for on ANY protein powder label:</strong> Look for the <em>Informed Sport</em> or <em>NSF Certified for Sport</em> logo. No logo = not independently tested for heavy metals.
+    </div>
+  </div>
+</div>
+
+<div class="tabs-wrapper">
+  <div class="tabs">
+    <button id="btn-1" class="tab-btn" onclick="showDay(1)">Monday</button>
+    <button id="btn-2" class="tab-btn" onclick="showDay(2)">Tuesday</button>
+    <button id="btn-3" class="tab-btn" onclick="showDay(3)">Wednesday</button>
+    <button id="btn-4" class="tab-btn" onclick="showDay(4)">Thursday</button>
+    <button id="btn-5" class="tab-btn" onclick="showDay(5)">Friday</button>
+    <button id="btn-0" class="tab-btn" onclick="showDay(0)">Weekend</button>
+    <button id="btn-grocery" class="tab-btn grocery-tab" onclick="showGrocery()">🛒 Grocery Planner</button>
+  </div>
+</div>
+
+<div id="main-view" class="main-grid">
+  <div class="meal-list" id="meal-list">
+    <div class="day-theme">
+      <div class="day-theme-label">Today's Protocol</div>
+      <div class="day-theme-name" id="day-theme-name">Select a Day</div>
+    </div>
+    <div id="meal-cards-container"></div>
+  </div>
+  <div class="recipe-panel" id="recipe-panel">
+    <div class="recipe-empty">
+      <div class="recipe-empty-icon">🍽️</div>
+      <div class="recipe-empty-text">Select a meal to view recipe</div>
+    </div>
+  </div>
+</div>
+
+<div id="grocery-view" class="grocery-view hidden">
+
+  <div class="grocery-controls">
+    <div class="week-toggle">
+      <button class="week-btn active" onclick="setWeek(1,this)">1 Week</button>
+      <button class="week-btn" onclick="setWeek(2,this)">2 Weeks</button>
+      <button class="week-btn" onclick="setWeek(3,this)">3 Weeks</button>
+    </div>
+  </div>
+
+  <div class="store-filter-bar">
+    <div class="store-filter-label">Where are you shopping today? Tick all stops.</div>
+    <div class="store-chips" id="storeChips">
+      <button class="chip-all" onclick="toggleAllStores(true)">All On</button>
+      <button class="chip-all" onclick="toggleAllStores(false)">Clear</button>
+      <span class="store-chip on" data-store="Billa"      onclick="toggleStore(this)">🔴 Billa</span>
+      <span class="store-chip on" data-store="Spar"       onclick="toggleStore(this)">🟢 Spar</span>
+      <span class="store-chip on" data-store="Billa Plus" onclick="toggleStore(this)">🔴 Billa Plus</span>
+      <span class="store-chip on" data-store="Hofer"      onclick="toggleStore(this)">🔵 Hofer</span>
+      <span class="store-chip on" data-store="Lidl"       onclick="toggleStore(this)">🟡 Lidl</span>
+      <span class="store-chip on" data-store="Penny"      onclick="toggleStore(this)">🔴 Penny</span>
+      <span class="store-chip on" data-store="dm"         onclick="toggleStore(this)">🟠 dm</span>
+      <span class="store-chip on" data-store="BiPA"       onclick="toggleStore(this)">🟣 BiPA</span>
+    </div>
+  </div>
+
+  <div class="shop-summary" id="shopSummary" style="display:none"></div>
+
+  <!-- EXPORT BAR -->
+  <div class="export-bar">
+    <button class="export-btn-main" onclick="toggleExportPanel()">📤 Export List</button>
+    <span class="export-count" id="exportCount"></span>
+  </div>
+
+  <!-- EXPORT PANEL -->
+  <div class="export-panel" id="exportPanel">
+    <div class="export-panel-title">Export your shopping list</div>
+
+    <div class="export-options">
+      <button class="export-opt-btn active-opt" id="fmt-tick"   onclick="setExportFmt('tick',this)">   <span class="exp-icon">☑️</span> Tickboxes (☐ item)</button>
+      <button class="export-opt-btn"             id="fmt-bullet" onclick="setExportFmt('bullet',this)"><span class="exp-icon">•</span>  Bullets</button>
+      <button class="export-opt-btn"             id="fmt-plain"  onclick="setExportFmt('plain',this)"> <span class="exp-icon">📄</span> Plain text</button>
+    </div>
+
+    <div class="export-preview-label">Preview</div>
+    <div class="export-preview" id="exportPreview"></div>
+
+    <div class="export-actions">
+      <button class="exp-action-btn copy"     onclick="doExportCopy()">📋 Copy to Clipboard</button>
+      <button class="exp-action-btn notes"    onclick="doExportNotes()">📝 iPhone Notes</button>
+      <button class="exp-action-btn whatsapp" onclick="doExportWhatsApp()">💬 WhatsApp</button>
+      <button class="exp-action-btn email"    onclick="doExportEmail()">✉️ Email</button>
+    </div>
+    <div class="exp-toast" id="expToast">✅ Copied to clipboard!</div>
+  </div>
+
+  <div id="grocery-tables"></div>
+</div>
+
+<script>
+let currentWeek = 1;
+let selectedMeal = null;
+let currentDay = null;
+
+// ─── SCHEDULE DATA ──────────────────────────────────────────────
+const schedule = {
+  1: { theme: "Vegetarian Monday", meals: [
+    { time:"07:30–08:00", label:"Meal 1 · Foundation", name:"Rye, Poached Eggs & Sauerkraut",
+      ingredients:[
+        {amount:"80g", item:"Billa Bio Roggenbrot", note:"2 thick slices"},
+        {amount:"2", item:"Billa Bio Freilandeier", note:"free-range, size M"},
+        {amount:"60g", item:"ripe Avocado", note:"≈ ½ avocado"},
+        {amount:"50g", item:"Hengstenberg Sauerkraut", note:"live, refrigerated jar — cold"},
+        {amount:"30g", item:"Billa Bio Grünkohl / Babykale", note:"or baby spinach as fallback — stems stripped"},
+        {amount:"1 splash", item:"white wine vinegar", note:"for poaching"},
+        {amount:"to taste", item:"sea salt & black pepper", note:""}
+      ],
+      steps:[
+        {emoji:"🔪", title:"The Setup — Do Not Turn On Heat Yet",
+         text:"Prep everything before any heat. Crack eggs into two separate small cups or ramekins. Portion 50g sauerkraut into a side bowl and put it back in the fridge — it stays cold.",
+         bullets:[]},
+        {emoji:"🥑", title:"The Avocado",
+         text:"Halve the avocado. Remove the stone. Scoop exactly 60g into a small bowl.",
+         bullets:["Mash with a fork — smooth but slightly chunky, not baby food.","Season with a pinch of sea salt and a generous crack of black pepper.","Set aside."]},
+        {emoji:"💧", title:"Poach the Eggs",
+         text:"Fill a small saucepan with water. Add a splash of white vinegar — this helps the whites hold together. Bring to barely simmering: small bubbles rising, not a rolling boil.",
+         bullets:["Stir the water in a slow circle to create a gentle vortex.","Slide egg #1 from its cup into the center of the vortex. Set timer: 3 minutes.","After 90 seconds, slide in egg #2.","Lift out with a slotted spoon. Rest on a folded kitchen towel to drain water."]},
+        {emoji:"🍞", title:"Toast",
+         text:"While the eggs poach, toast the Roggenbrot. Rye takes 90 seconds — watch it, it burns quickly.",
+         bullets:[]},
+        {emoji:"🌿", title:"Wilt the Kale",
+         text:"While the eggs poach, add 30g kale to the dry (no oil) toast pan for 60 seconds on medium heat, tossing with tongs. You want it wilted but still dark green — not brown. Season with a pinch of salt.",
+         bullets:[]},
+        {emoji:"🍱", title:"Assemble & Eat",
+         text:"Spread avocado on both toast slices. Top with wilted kale. Place one poached egg on each. Crack black pepper over the top. Serve cold sauerkraut on the side — never heat it. This is Daniel Craig's exact Bond set breakfast per Waterson (p.241).",
+         bullets:[]}
+      ]},
+
+    { time:"09:30–10:00", label:"Meal 2 · Post-Gym Shake", name:"Bond Performance Shake",
+      ingredients:[
+        {amount:"120g", item:"ripe Banana", note:"1 medium — freeze chunks overnight for best texture"},
+        {amount:"30g", item:"Protein Powder", note:"⚠️ See Safety Note below — use Optimum Nutrition Gold Standard Whey or dm Layenberger Whey — vanilla, unflavoured"},
+        {amount:"40g", item:"Billa Bio Babyspinat", note:"fresh — you won't taste it"},
+        {amount:"250ml", item:"Oatly Hafermilch", note:"or Alpro Hafer Drink"},
+        {amount:"10g", item:"Billa Bio Chia Samen", note:"chia seeds — 1 tbsp"},
+        {amount:"10g", item:"Hanfsamen (Hemp Seeds)", note:"1 tbsp — dmBio (dm only, not at Billa)"},
+        {amount:"10g", item:"Billa Bio Gojibeeren", note:"1 tbsp goji berries"},
+        {amount:"5g", item:"Maca Wurzelpulver", note:"1 tsp — dmBio Maca Pulver (dm only, not at Billa)"},
+        {amount:"pinch", item:"Zimt (Cinnamon)", note:"Sarah Sugden's recipe — Kotányi"},
+        {amount:"handful", item:"ice cubes", note:""}
+      ],
+      steps:[
+        {emoji:"⚡", title:"Order Matters — Load the Blender This Way",
+         text:"Always add liquid first. This stops the protein powder from caking on the blades.",
+         bullets:["1. Pour 250ml oat milk into blender.","2. Add baby spinach.","3. Add banana chunks.","4. Add protein powder on top.","5. Add chia seeds, hemp seeds, goji berries.","6. Add maca powder and cinnamon.","7. Add ice last."]},
+        {emoji:"🌀", title:"Blend",
+         text:"Blend on high for 45 seconds until completely smooth. Zero green chunks visible. Shake should be thick but pourable.",
+         bullets:["Too thick? Add 2 tbsp oat milk and blend 10 more seconds.","Too thin? Add 3 ice cubes and blend again."]},
+        {emoji:"⏱️", title:"The 30-Minute Window",
+         text:"Drink this within 20–30 minutes of finishing your workout. This is the recovery window when muscle cells are most receptive to nutrients. Missing this window wastes the session.",
+         bullets:[]}
+      ]},
+
+    { time:"12:30–13:00", label:"Meal 3 · Theme Brunch", name:"Red Lentil & Spinach Dahl",
+      ingredients:[
+        {amount:"60g", item:"Billa Bio Rote Linsen", note:"dry red lentils"},
+        {amount:"30g", item:"Billa Bio Babyspinat", note:"fresh spinach"},
+        {amount:"½ small", item:"Onion", note:"diced fine"},
+        {amount:"1 clove", item:"Garlic", note:"minced"},
+        {amount:"½ tsp", item:"Billa Bio Kurkuma", note:"ground turmeric"},
+        {amount:"¼ tsp", item:"Kotányi Kreuzkümmel", note:"ground cumin"},
+        {amount:"5g", item:"Rapso Rapsöl", note:""},
+        {amount:"250ml", item:"water", note:"have extra ready"},
+        {amount:"to taste", item:"sea salt", note:""}
+      ],
+      steps:[
+        {emoji:"🔪", title:"Mise en Place",
+         text:"Rinse lentils in a fine sieve under cold running water for 30 seconds — do not skip this. Dice the onion finely. Mince the garlic. Measure all spices into one small bowl so they're ready.",
+         bullets:[]},
+        {emoji:"🧅", title:"Build the Base",
+         text:"Heat 5g Rapso oil in a medium saucepan over medium heat. Add diced onion. Cook 3 minutes, stirring occasionally, until soft and translucent.",
+         bullets:["Add minced garlic. Cook 60 seconds. Do not let it brown.","Add the turmeric and cumin. Stir constantly for 30 seconds. The spices will bloom and smell fragrant — this is releasing their oils."]},
+        {emoji:"🍲", title:"The Simmer",
+         text:"Add the rinsed lentils and 250ml water. Stir to combine. Bring to a boil on high heat, then immediately drop to the lowest heat setting.",
+         bullets:["Put the lid on slightly ajar. Simmer 15 minutes.","Stir every 5 minutes. If it thickens too fast, add a splash of water.","Done when lentils are completely soft and beginning to break apart into a thick paste."]},
+        {emoji:"🌿", title:"Finish with Spinach",
+         text:"Stir the spinach in. It will wilt in under 2 minutes. Season with sea salt. Taste — does it need more salt? A drop more lemon? Adjust.",
+         bullets:[]},
+        {emoji:"😴", title:"Eat & Nap Protocol",
+         text:"Eat slowly. Then set your phone timer to exactly 20 minutes and take your Athlete's Nap. Lie down, close your eyes. At 20 minutes you are in light sleep — easy to wake from, energy restored. Past 20 minutes your body enters deep sleep and waking is a struggle.",
+         bullets:[]}
+      ]},
+
+    { time:"15:00–15:30", label:"Meal 4 · Fuel", name:"Apple & Raw Walnuts",
+      ingredients:[
+        {amount:"150g", item:"Apple", note:"1 medium, any variety"},
+        {amount:"25g", item:"Billa Bio Walnüsse", note:"raw, unroasted"}
+      ],
+      steps:[
+        {emoji:"🍎", title:"Simple Protocol",
+         text:"Wash the apple. Weigh out exactly 25g walnuts into a small bowl. Eat slowly and chew thoroughly.",
+         bullets:["The fat and protein in the walnuts blunts the apple's sugar spike, keeping energy stable until Meal 5.","Do not add anything else. Simplicity is the point."]}
+      ]},
+
+    { time:"18:00–19:00", label:"Meal 5 · Performance", name:"Halloumi & Quinoa Bowl",
+      ingredients:[
+        {amount:"75g dry", item:"Billa Bio Quinoa Tricolore", note:"→ yields ≈150g cooked"},
+        {amount:"60g", item:"Halloumi", note:"Billa/Spar — cut from a 200g pack"},
+        {amount:"100g", item:"Zucchini", note:"½ medium zucchini"},
+        {amount:"5g", item:"Rapso Rapsöl", note:"for zucchini only"},
+        {amount:"½", item:"Lemon", note:"freshly squeezed"},
+        {amount:"5g", item:"Kotányi Little Italy", note:"herb spice blend"},
+        {amount:"to taste", item:"salt & black pepper", note:""}
+      ],
+      steps:[
+        {emoji:"🌾", title:"Cook the Quinoa First — It Takes 20 Minutes",
+         text:"Put quinoa in a fine sieve. Rinse under cold water for 30 seconds — unrinsed quinoa tastes bitter. This is not optional.",
+         bullets:["Saucepan: add rinsed quinoa + 150ml water + pinch of salt.","High heat until boiling. The moment it boils: drop to lowest heat, lid on, timer 12 minutes.","When timer goes: OFF heat completely, lid stays on, rest 5 minutes.","Fluff with a fork. Each grain should be separate with a tiny white spiral tail."]},
+        {emoji:"🥒", title:"Grill the Zucchini",
+         text:"Slice zucchini into 1cm rounds. Season with salt and pepper.",
+         bullets:["Heat a grill pan or non-stick pan over HIGH heat until you can feel the heat when you hold your hand 10cm above it.","Brush zucchini lightly with 5g Rapso oil.","Place in a single layer. Do not touch or move them for 2–3 minutes. You want grill marks.","Flip. Cook 2 more minutes. Remove and set aside."]},
+        {emoji:"🔥", title:"Sear the Halloumi",
+         text:"Slice halloumi into 1cm slabs. Halloumi has enough fat — no oil needed.",
+         bullets:["Same pan, medium-high heat.","Lay slices flat. Do not touch for 2 full minutes. They will release when the crust forms.","Flip. Cook 2 minutes the other side. Both sides should be deep golden."]},
+        {emoji:"🍱", title:"Build the Bowl",
+         text:"Spoon quinoa into a bowl as the base. Layer grilled zucchini on top. Place halloumi last.",
+         bullets:["Squeeze half a lemon over everything.","Sprinkle the Little Italy blend.","Eat immediately — halloumi is only good hot."]}
+      ]},
+
+    { time:"20:30–21:00", label:"Meal 6 · Sleep Prep", name:"Ginger & Turmeric Broth",
+      ingredients:[
+        {amount:"300ml", item:"Billa Bio Gemüsebrühe", note:"vegetable broth"},
+        {amount:"10g", item:"fresh Ingwer", note:"Billa Bio Ginger root"},
+        {amount:"3g", item:"fresh Kurkuma", note:"or ½ tsp Billa Bio Kurkuma powder"},
+        {amount:"pinch", item:"schwarzer Pfeffer", note:"MANDATORY — activates curcumin absorption up to 2000%"}
+      ],
+      steps:[
+        {emoji:"🍵", title:"Heat the Broth",
+         text:"Pour 300ml broth into a small saucepan. Medium heat. Get it hot — steam rising — but do not boil. Boiling destroys the active compounds.",
+         bullets:[]},
+        {emoji:"🌿", title:"Grate the Roots",
+         text:"Use a fine microplane grater. Grate fresh ginger and turmeric root directly over the hot broth.",
+         bullets:["If using powder: whisk ½ tsp turmeric powder directly in.","Black pepper is mandatory: turmeric's active compound (curcumin) has poor bioavailability on its own. Piperine in black pepper increases absorption dramatically. Do not skip this."]},
+        {emoji:"😴", title:"Timing",
+         text:"Sip slowly. Drink this 90–120 minutes before you intend to sleep. The anti-inflammatory compounds absorb best during your overnight fast.",
+         bullets:[]}
+      ]}
+  ]},
+
+  2: { theme: "Pescatarian Tuesday", meals: [
+    { time:"07:30–08:00", label:"Meal 1 · Foundation", name:"Rio Mare Tuna & Scrambled Eggs on Rye",
+      ingredients:[
+        {amount:"40g", item:"Billa Bio Roggenbrot", note:"1 thick slice"},
+        {amount:"2", item:"Billa Bio Freilandeier", note:"free-range"},
+        {amount:"80g", item:"Rio Mare Tonno al Naturale", note:"1/2 tin — tuna in water, drained"},
+        {amount:"50g", item:"Hengstenberg Sauerkraut", note:"cold, live"},
+        {amount:"½ tsp", item:"Kotányi Little Italy", note:"herb mix — on the tuna"},
+        {amount:"drops", item:"Rapso Rapsöl", note:"just to coat the pan"},
+        {amount:"to taste", item:"black pepper & lemon", note:""}
+      ],
+      steps:[
+        {emoji:"🥫", title:"Prep the Tuna",
+         text:"Open and drain the Rio Mare tin completely. Press with a fork to squeeze out all water — wet tuna on toast is unpleasant. Flake it into a bowl, season with Little Italy herbs, a squeeze of lemon, and black pepper. Set aside.",
+         bullets:[]},
+        {emoji:"🥚", title:"Low & Slow Scrambled Eggs",
+         text:"The key: low heat, slow movement, off the heat while still slightly wet.",
+         bullets:["Heat a small non-stick pan over LOW heat. Add just drops of oil.","Pour in the 2 whisked eggs. Using a silicone spatula, slowly push from the edges to the center.","Remove from heat when 70% set — they finish cooking from residual heat.","Soft, slightly glossy, large folds. Not rubbery."]},
+        {emoji:"🍱", title:"Assemble",
+         text:"Toast the rye. Spoon scrambled eggs on the toast. Pile the seasoned Rio Mare tuna on top. Serve cold sauerkraut on the side.",
+         bullets:[]}
+      ]},
+
+    { time:"09:30–10:00", label:"Meal 2 · Post-Gym Shake", name:"Bond Performance Shake",
+      ingredients:[
+        {amount:"120g", item:"ripe Banana", note:"frozen preferred"},
+        {amount:"30g", item:"Pea Protein Powder", note:"Optimum Nutrition Gold Standard Whey or dm Layenberger — vanilla, unflavoured"},
+        {amount:"40g", item:"Billa Bio Babyspinat", note:""},
+        {amount:"250ml", item:"Oatly Hafermilch", note:""},
+        {amount:"10g ea", item:"Chia + Hemp Seeds + Goji Berries", note:"1 tbsp each — Sarah Sugden recipe"},
+        {amount:"5g", item:"Maca Wurzelpulver", note:"1 tsp — dmBio (dm only)"},
+        {amount:"pinch", item:"Zimt (Cinnamon)", note:"Kotányi"},
+        {amount:"handful", item:"ice", note:""}
+      ],
+      steps:[
+        {emoji:"🌀", title:"Blend (same as Monday)",
+         text:"Liquid → spinach → banana → protein → chia/hemp/goji → maca → cinnamon → ice. Blend 45 sec on high. Drink within 20–30 min of finishing your workout. This is the full Sarah Sugden recipe.",
+         bullets:[]}
+      ]},
+
+    { time:"12:30–13:00", label:"Meal 3 · Theme Brunch", name:"Rio Mare Tuna Mediterranean Bowl",
+      ingredients:[
+        {amount:"160g (2 tins)", item:"Rio Mare Tonno al Naturale", note:"tuna in water — drained completely"},
+        {amount:"½", item:"Bio Gurke (Cucumber)", note:"seeds scooped, diced small"},
+        {amount:"2", item:"Cherry Tomaten", note:"halved — or 1 medium tomato, diced"},
+        {amount:"¼", item:"Red Zwiebel (Red Onion)", note:"very finely sliced — soak in cold water 5 min to tame the bite"},
+        {amount:"30g", item:"Billa Bio Salatmischung", note:"mixed leaves as base"},
+        {amount:"5g", item:"Sesam", note:"sesame seeds — Billa"},
+        {amount:"5g", item:"Sojasauce", note:"low sodium"},
+        {amount:"5g", item:"Zitronensaft", note:"freshly squeezed"},
+        {amount:"3g", item:"Rapso Rapsöl", note:""},
+        {amount:"to taste", item:"Kotányi Little Italy", note:"herb blend"}
+      ],
+      steps:[
+        {emoji:"🥫", title:"Drain and Season the Tuna",
+         text:"Open both Rio Mare tins. Drain all water through a sieve — press down with a fork to extract it completely. Too much water makes the bowl watery and weak.",
+         bullets:["Flake tuna into a bowl. Season with Little Italy herbs, a squeeze of lemon, and a pinch of black pepper.","Taste it. It should be flavourful before it even goes in the bowl."]},
+        {emoji:"🔪", title:"Prep the Veg",
+         text:"Dice the cucumber small — scoop out the watery seeds first with a spoon. Halve the cherry tomatoes. Slice the red onion paper-thin.",
+         bullets:["Soak red onion in cold water for 5 minutes if you find raw onion too sharp. Drain and pat dry."]},
+        {emoji:"🍱", title:"Build the Bowl",
+         text:"Arrange salad leaves as the base. Top with cucumber, tomatoes, red onion. Place seasoned tuna in the center. Drizzle soy sauce, lemon juice, and Rapso oil over everything. Finish with sesame seeds.",
+         bullets:["Serve cold. Eat slowly.","Athlete's Nap protocol follows immediately after this meal."]},
+      ]},
+
+    { time:"15:00–15:30", label:"Meal 4 · Fuel", name:"Pear & Raw Almonds",
+      ingredients:[
+        {amount:"150g", item:"Pear", note:"1 medium, ripe"},
+        {amount:"20g", item:"Billa Bio Mandeln", note:"raw, unroasted"}
+      ],
+      steps:[
+        {emoji:"🍐", title:"Simple Protocol",
+         text:"Wash and eat the pear. Weigh 20g almonds. Eat slowly. Almonds are higher in protein than walnuts — good for Tuesday's fish-heavy day.",
+         bullets:[]}
+      ]},
+
+    { time:"18:00–19:00", label:"Meal 5 · Performance", name:"Rio Mare Tuna, Sweet Potato & Broccoli",
+      ingredients:[
+        {amount:"2 tins (320g)", item:"Rio Mare Tonno al Naturale", note:"tuna in water — Tue is your highest-protein fish day"},
+        {amount:"120g", item:"Süßkartoffel", note:"sweet potato — Billa"},
+        {amount:"100g", item:"Brokkoli", note:"Billa Bio"},
+        {amount:"5g", item:"Rapso Rapsöl", note:""},
+        {amount:"½", item:"Lemon", note:""},
+        {amount:"½ tsp", item:"Paprika edelsüß", note:"Kotányi — on the tuna"},
+        {amount:"to taste", item:"salt, pepper, Kotányi Little Italy", note:""}
+      ],
+      steps:[
+        {emoji:"🥦", title:"Steam the Veg First",
+         text:"Peel sweet potato. Cut into 2cm cubes. Cut broccoli into even florets.",
+         bullets:["Place in a steamer basket over boiling water. Cover tightly.","Steam 14–16 minutes until sweet potato is completely tender when pierced.","Season with a pinch of salt."]},
+        {emoji:"🥫", title:"Prepare the Tuna",
+         text:"Drain both tins completely — press with a fork to remove all water. The tuna should feel almost dry.",
+         bullets:["Flake into a bowl. Season with paprika edelsüß, Little Italy herbs, lemon juice, salt and pepper.","Taste and adjust. It should taste like a complete flavour."]},
+        {emoji:"🍱", title:"Plate",
+         text:"Arrange steamed sweet potato and broccoli on the plate. Place the seasoned tuna alongside. Squeeze extra lemon over everything.",
+         bullets:["Note: 2 Rio Mare tins = approx 200g drained tuna. Pescatarian Tuesday is your big protein anchor day."]}
+      ]},
+
+    { time:"20:30–21:00", label:"Meal 6 · Sleep Prep", name:"Miso Soup with Tofu",
+      ingredients:[
+        {amount:"300ml", item:"hot water", note:"just off the boil — not boiling"},
+        {amount:"15g", item:"Shiro Miso Paste", note:"white miso — Asian supermarket or dm Bio"},
+        {amount:"30g", item:"Seidentofu", note:"silk tofu — Asian supermarket"},
+        {amount:"1 small", item:"Frühlingszwiebel", note:"spring onion, sliced thin"},
+        {amount:"20g", item:"Billa Bio Babyspinat", note:"a small handful — replaces seaweed"}
+      ],
+      steps:[
+        {emoji:"⚠️", title:"Critical Rule: Never Boil Miso",
+         text:"Miso is a live fermented food. Boiling kills the probiotic bacteria — the entire therapeutic reason for drinking it at night.",
+         bullets:["Boil your water. Remove from heat. Wait 60 seconds. Then proceed."]},
+        {emoji:"🥄", title:"Build the Soup",
+         text:"Cut silk tofu into 1cm cubes — silk tofu is very delicate, use a gentle sawing motion.",
+         bullets:["Whisk miso paste with a small amount of warm water until fully dissolved — no lumps.","Add dissolved miso to the rest of the water.","Add tofu cubes, sliced spring onion, and baby spinach. The spinach wilts instantly in the warm broth.","Sip slowly — this is your overnight probiotic and anti-inflammatory dose."]},
+      ]}
+  ]},
+
+  3: { theme: "Vegan Wednesday", meals: [
+    { time:"07:30–08:00", label:"Meal 1 · Foundation", name:"Avocado & Sourdough with Seeds",
+      ingredients:[
+        {amount:"80g", item:"Billa Bio Sauerteigbrot", note:"2 slices — genuine sourdough, not just 'sour-flavored'"},
+        {amount:"60g", item:"ripe Avocado", note:"½ avocado"},
+        {amount:"10g", item:"Billa Bio Kürbiskerne", note:"pumpkin seeds — raw"},
+        {amount:"50g", item:"Hengstenberg Sauerkraut", note:"cold, live"},
+        {amount:"5g", item:"Zitronensaft", note:"lemon juice"},
+        {amount:"pinch", item:"Chiliflocken", note:"chili flakes, optional"},
+        {amount:"to taste", item:"salt & pepper", note:""}
+      ],
+      steps:[
+        {emoji:"🍞", title:"Toast",
+         text:"Toast the sourdough slices until golden and crisp on the outside — it should hold the weight of the avocado without going soggy.",
+         bullets:[]},
+        {emoji:"🥑", title:"The Avocado",
+         text:"Scoop 60g avocado into a bowl. Add lemon juice, salt, pepper, and chili flakes.",
+         bullets:["Mash with a fork. Leave some texture — not a smooth purée.","Taste it. The lemon and chili should be present."]},
+        {emoji:"🍱", title:"Assemble",
+         text:"Spread avocado generously on both toast slices. Press pumpkin seeds into the surface so they don't fall off. Serve cold sauerkraut on the side.",
+         bullets:["Wednesday is Vegan Day — no eggs, no dairy. This meal confirms the theme."]}
+      ]},
+
+    { time:"09:30–10:00", label:"Meal 2 · Post-Gym Shake", name:"Vegan Performance Shake",
+      ingredients:[
+        {amount:"120g", item:"Banana", note:"frozen preferred"},
+        {amount:"30g", item:"Protein Powder (plant-based Wednesday)", note:"⚠️ See Safety Note — use dm Layenberger plant protein or Spar Free From Pea Protein — vanilla only, not chocolate"},
+        {amount:"40g", item:"Billa Bio Babyspinat", note:""},
+        {amount:"250ml", item:"Oatly Hafermilch", note:""},
+        {amount:"10g ea", item:"Chia + Hemp Seeds + Goji Berries", note:"1 tbsp each — Sarah Sugden recipe"},
+        {amount:"5g", item:"Maca Wurzelpulver", note:"1 tsp — dmBio (dm only)"},
+        {amount:"pinch", item:"Zimt (Cinnamon)", note:"Kotányi"},
+        {amount:"handful", item:"ice", note:""}
+      ],
+      steps:[
+        {emoji:"🌱", title:"Full Recipe, Vegan Confirmed",
+         text:"Liquid → spinach → banana → protein powder → chia/hemp/goji → maca → cinnamon → ice. Blend 45 seconds on high. All ingredients are vegan today.",
+         bullets:["Confirm protein powder label: no whey, no casein, no egg — Pea Isolate or Hemp Protein only."]}
+      ]},
+
+    { time:"12:30–13:00", label:"Meal 3 · Theme Brunch", name:"Chickpea & Kale Grain Bowl",
+      ingredients:[
+        {amount:"100g", item:"Billa Bio Kichererbsen", note:"canned — drain and rinse well"},
+        {amount:"50g", item:"Grünkohl / Kale", note:"fresh — stems removed, leaves chopped"},
+        {amount:"25g dry", item:"Billa Bio Vollkornreis", note:"→ yields ≈ 50g cooked"},
+        {amount:"1 clove", item:"Knoblauch", note:"garlic, crushed"},
+        {amount:"5g", item:"Rapso Rapsöl", note:""},
+        {amount:"½", item:"Lemon", note:""},
+        {amount:"¼ tsp", item:"Chiliflocken", note:"chili flakes"},
+        {amount:"to taste", item:"salt", note:""}
+      ],
+      steps:[
+        {emoji:"🍚", title:"Cook the Brown Rice First — Starts 30 Min Before Eating",
+         text:"Brown rice takes time. Do not try to rush it.",
+         bullets:["Rinse 25g brown rice in a sieve under cold water.","Add to small saucepan with 65ml water and a pinch of salt.","High heat until boiling. Drop to lowest heat, lid on, timer 25 minutes.","Off heat, lid stays on, 5 minutes rest. Fluff with fork."]},
+        {emoji:"🥦", title:"Build the Bowl",
+         text:"While rice cooks, strip kale leaves from stems. Tear or chop into rough pieces. Rinse chickpeas.",
+         bullets:["Heat 5g oil in a pan over medium-high heat.","Add crushed garlic. Cook 30 seconds — don't burn it.","Add chickpeas. Cook 3 minutes, tossing, until they start to crisp slightly at the edges.","Add kale. Squeeze half a lemon over it. Add chili flakes. Toss vigorously for 2 minutes until wilted.","Season with salt."]},
+        {emoji:"🍱", title:"Plate & Nap",
+         text:"Spoon rice into the bowl. Top with chickpea and kale mix. Eat. Then take your 20-minute Athlete's Nap.",
+         bullets:[]}
+      ]},
+
+    { time:"15:00–15:30", label:"Meal 4 · Fuel", name:"Berries & Cashews",
+      ingredients:[
+        {amount:"100g", item:"mixed Beeren", note:"Billa Bio frozen — thaw in advance, or fresh"},
+        {amount:"20g", item:"Billa Bio Cashews", note:"raw, unroasted"}
+      ],
+      steps:[
+        {emoji:"🫐", title:"Simple Protocol",
+         text:"If using frozen berries: take them out of the freezer at Meal 3 time so they thaw naturally by Meal 4. Weigh 20g cashews. Eat together.",
+         bullets:[]}
+      ]},
+
+    { time:"18:00–19:00", label:"Meal 5 · Performance", name:"Crispy Tofu & Quinoa Stir-fry",
+      ingredients:[
+        {amount:"150g", item:"Vega Vita Bio-Tofu", note:"firm — Billa (2×175g pack)"},
+        {amount:"50g dry", item:"Billa Bio Quinoa Tricolore", note:"→ yields ≈100g cooked"},
+        {amount:"15g", item:"Billa Bio Cashews", note:""},
+        {amount:"1", item:"Paprika / Bell Pepper", note:"red or yellow — diced"},
+        {amount:"50g", item:"Billa Bio Babyspinat", note:""},
+        {amount:"1 clove", item:"Knoblauch", note:"minced"},
+        {amount:"5g", item:"fresh Ingwer", note:"minced"},
+        {amount:"10g", item:"Sojasauce", note:"low sodium"},
+        {amount:"5g", item:"Rapso Rapsöl", note:""},
+        {amount:"½ tsp", item:"Sesamöl", note:"finishing oil only"},
+        {amount:"½ tsp", item:"Paprika edelsüß", note:"Kotányi"}
+      ],
+      steps:[
+        {emoji:"🔪", title:"The Setup",
+         text:"Step 1 is everything. Do this before any heat.",
+         bullets:["Tofu (150g): Remove from pack. Wrap in a clean kitchen towel. Press down firmly and hold for 30 seconds to force out water. Repeat with a dry section of the towel. Wet tofu boils; dry tofu crisps. Cut into 1cm cubes.","Quinoa: Rinse 50g under cold water in a sieve. Set aside.","Veg: Dice bell pepper. Mince garlic and ginger. Keep them separate — they go in at different times."]},
+        {emoji:"🌾", title:"Cook Quinoa",
+         text:"Add rinsed quinoa to a saucepan with 100ml water and a pinch of salt. High heat to boil, then lowest heat, lid on, 12 minutes. Off heat, lid on, 5 minutes. Fluff.",
+         bullets:[]},
+        {emoji:"🔥", title:"Crisp the Tofu — The Most Important Step",
+         text:"Heat a large frying pan over medium-high heat. When hot, add 5g Rapso oil. Wait 30 more seconds for oil to get hot.",
+         bullets:["Add tofu cubes in a SINGLE LAYER. Do not crowd the pan.","Do not touch them for 2 full minutes. Walk away.","They will release when a crust forms. Toss and cook 3–4 more minutes, turning to get all sides golden and crispy.","Season with paprika edelsüß and a pinch of salt. Toss once. Remove from pan and set aside."]},
+        {emoji:"🥘", title:"The Stir-fry",
+         text:"Same pan, back on medium-high heat.",
+         bullets:["Add bell pepper. Toss for 2 minutes.","Add garlic and ginger. Cook 30 seconds — fragrant.","Add spinach. Toss until just wilted, about 90 seconds.","Return crispy tofu to pan. Add cashews.","Add soy sauce and sesame oil. Toss everything together for 30 seconds."]},
+        {emoji:"🍱", title:"Plate",
+         text:"Quinoa as the base. Stir-fry on top. Eat immediately.",
+         bullets:[]}
+      ]},
+
+    { time:"20:30–21:00", label:"Meal 6 · Sleep Prep", name:"Warm Ginger Water",
+      ingredients:[
+        {amount:"300ml", item:"hot water", note:"just off the boil"},
+        {amount:"15g", item:"fresh Ingwer root", note:"Billa Bio — peel optional"}
+      ],
+      steps:[
+        {emoji:"🌿", title:"Method",
+         text:"Boil water. Let it sit 60 seconds off the heat. Grate fresh ginger directly into a mug using a fine grater. Pour warm water over it. Steep 5 minutes. Sip slowly.",
+         bullets:["Ginger contains gingerols and shogaols — natural anti-inflammatories that aid overnight muscle repair.","If you want sweetness: ½ tsp of raw honey is permitted."]}
+      ]}
+  ]},
+
+  4: { theme: "White Meat Thursday", meals: [
+    { time:"07:30–08:00", label:"Meal 1 · Foundation", name:"Turkey Omelette & Rye",
+      ingredients:[
+        {amount:"80g", item:"Billa Puten-Faschiertes", note:"ground turkey — or turkey strips, finely chopped"},
+        {amount:"2", item:"Billa Bio Freilandeier", note:"free-range"},
+        {amount:"40g", item:"Billa Bio Roggenbrot", note:"1 slice, toasted"},
+        {amount:"50g", item:"Hengstenberg Sauerkraut", note:"cold, live"},
+        {amount:"5g", item:"Rapso Rapsöl", note:""},
+        {amount:"½ tsp", item:"Paprika edelsüß", note:"Kotányi"},
+        {amount:"to taste", item:"salt & pepper", note:""}
+      ],
+      steps:[
+        {emoji:"🥩", title:"Brown the Turkey",
+         text:"Heat 5g oil in a small non-stick pan over medium-high heat. Add ground turkey. Break it up with a spatula into small pieces.",
+         bullets:["Cook 5–6 minutes, stirring, until completely cooked through with no pink remaining.","Season with paprika, salt, and pepper.","Spread it into an even layer in the pan."]},
+        {emoji:"🥚", title:"Make the Omelette",
+         text:"Whisk 2 eggs with a pinch of salt. Pour directly over the cooked turkey in the pan.",
+         bullets:["Let it sit undisturbed on medium heat for 60–90 seconds until the bottom sets.","The top will still look slightly wet. That's the moment to fold: slide a spatula under one side and fold in half.","Cook 30 more seconds. Remove from heat — residual heat finishes the egg."]},
+        {emoji:"🍞", title:"Toast & Serve",
+         text:"Toast the Roggenbrot while the omelette cooks. Serve omelette alongside toast and cold sauerkraut.",
+         bullets:[]}
+      ]},
+
+    { time:"09:30–10:00", label:"Meal 2 · Post-Gym Shake", name:"Bond Performance Shake",
+      ingredients:[
+        {amount:"120g", item:"Banana", note:"frozen preferred"},
+        {amount:"30g", item:"Pea Protein Powder", note:""},
+        {amount:"40g", item:"Billa Bio Babyspinat", note:""},
+        {amount:"250ml", item:"Oatly Hafermilch", note:""},
+        {amount:"10g ea", item:"Chia + Hemp Seeds + Goji Berries", note:"1 tbsp each"},
+        {amount:"5g", item:"Maca Wurzelpulver", note:"1 tsp — dmBio (dm only)"},
+        {amount:"pinch", item:"Zimt (Cinnamon)", note:"Kotányi"},
+        {amount:"handful", item:"ice", note:""}
+      ],
+      steps:[
+        {emoji:"🌀", title:"Blend — Full Sarah Sugden Recipe",
+         text:"Liquid → spinach → banana → protein → chia/hemp/goji → maca → cinnamon → ice. Blend 45 sec on high. Drink within 20–30 min post-workout.",
+         bullets:[]}
+      ]},
+
+    { time:"12:30–13:00", label:"Meal 3 · Theme Brunch", name:"Chicken & Avocado Salad",
+      ingredients:[
+        {amount:"100g", item:"Billa Bio Hühnchenbrust", note:"chicken breast"},
+        {amount:"50g", item:"ripe Avocado", note:""},
+        {amount:"50g", item:"Billa Bio Salatmischung", note:"mixed salad leaves"},
+        {amount:"5g", item:"Zitronensaft", note:"lemon juice"},
+        {amount:"3g", item:"Rapso Rapsöl", note:""},
+        {amount:"to taste", item:"salt & pepper", note:""}
+      ],
+      steps:[
+        {emoji:"🍗", title:"Cook the Chicken",
+         text:"Season chicken breast on both sides with salt and pepper.",
+         bullets:["Heat a grill pan or frying pan over medium-high heat. Add a few drops of oil.","Cook 5–6 minutes per side until cooked through (no pink inside). Do not overcook — it dries out fast.","Remove from heat. REST for 5 full minutes before slicing. This keeps it juicy.","Slice diagonally into thin strips."]},
+        {emoji:"🥗", title:"Assemble",
+         text:"Slice avocado. Arrange salad leaves in a bowl or plate. Top with sliced chicken and avocado.",
+         bullets:["Drizzle lemon juice and Rapso oil over everything. No additional dressing needed.","Eat. Then take your 20-minute Athlete's Nap."]}
+      ]},
+
+    { time:"15:00–15:30", label:"Meal 4 · Fuel", name:"Greek Yogurt & Pumpkin Seeds",
+      ingredients:[
+        {amount:"100g", item:"Billa Bio Griechischer Joghurt", note:"10% fat — full fat, not low-fat"},
+        {amount:"15g", item:"Billa Bio Kürbiskerne", note:"raw pumpkin seeds"}
+      ],
+      steps:[
+        {emoji:"🥛", title:"Simple Protocol",
+         text:"Spoon yogurt into a bowl. Top with pumpkin seeds. Full-fat Greek yogurt provides slow-digesting casein protein — ideal for the pre-dinner gap.",
+         bullets:["Optional: a small drizzle of raw Honig (honey — Billa Bio)."]}
+      ]},
+
+    { time:"18:00–19:00", label:"Meal 5 · Performance", name:"Grilled Turkey Fillet & Roasted Roots",
+      ingredients:[
+        {amount:"150g", item:"Billa Putenfiletsteak", note:"turkey fillet steak"},
+        {amount:"100g", item:"Karotten", note:"2 medium carrots — Billa Bio"},
+        {amount:"80g", item:"Pastinaken", note:"1 small parsnip"},
+        {amount:"5ml", item:"Rapso Rapsöl", note:"for roasting"},
+        {amount:"½ tsp", item:"dried Thymian", note:"thyme — Kotányi"},
+        {amount:"½ tsp", item:"Paprika edelsüß", note:""},
+        {amount:"to taste", item:"salt & pepper", note:""}
+      ],
+      steps:[
+        {emoji:"🔥", title:"Preheat Oven to 200°C",
+         text:"Do this first. While it heats, prep the vegetables.",
+         bullets:[]},
+        {emoji:"🥕", title:"Prep & Roast the Roots",
+         text:"Peel carrots and parsnips. Cut into 2–3cm chunks — even sizing so they cook at the same rate.",
+         bullets:["Toss on a baking tray with 5ml Rapso oil, thyme, salt, and pepper.","Spread in a single layer — do not pile them up or they'll steam, not roast.","Roast at 200°C for 25–30 minutes, turning once at the 15-minute mark.","They're done when golden at the edges and tender when pierced."]},
+        {emoji:"🦃", title:"Grill the Turkey",
+         text:"Take turkey fillet out of the fridge 10 minutes before cooking — room temperature cooks more evenly.",
+         bullets:["Season both sides generously with salt, pepper, and paprika edelsüß.","Heat a grill pan over medium-high heat. Brush with a tiny drop of oil.","Cook 5–6 minutes per side. Do not press down on it.","Internal temperature should reach 75°C. Use a thermometer if you have one, or check that juices run completely clear.","REST 3 minutes before cutting."]}
+      ]},
+
+    { time:"20:30–21:00", label:"Meal 6 · Sleep Prep", name:"Chicken Consommé",
+      ingredients:[
+        {amount:"300ml", item:"Billa Bio Hühnerbrühe", note:"clear chicken broth/stock"},
+        {amount:"pinch", item:"sea salt", note:""},
+        {amount:"3 thin slices", item:"fresh Ingwer", note:"optional"}
+      ],
+      steps:[
+        {emoji:"🍵", title:"Method",
+         text:"Heat chicken broth in a saucepan until hot but not boiling. Add ginger slices if using, steep 3 minutes. Season lightly with sea salt. Pour into a mug. Sip slowly, 90–120 minutes before bed.",
+         bullets:["Clear broth is easy on the digestive system, preventing sleep disruption from a heavy late-night meal.","The amino acids (especially glycine) in bone broth actively promote deeper sleep."]}
+      ]}
+  ]},
+
+  5: { theme: "Red Meat Friday", meals: [
+    { time:"07:30–08:00", label:"Meal 1 · Foundation", name:"Rye, Poached Eggs & Sauerkraut",
+      ingredients:[
+        {amount:"80g", item:"Billa Bio Roggenbrot", note:"2 thick slices"},
+        {amount:"2", item:"Billa Bio Freilandeier", note:"free-range"},
+        {amount:"60g", item:"ripe Avocado", note:""},
+        {amount:"50g", item:"Hengstenberg Sauerkraut", note:"cold, live"},
+        {amount:"30g", item:"Billa Bio Grünkohl / Babykale", note:"stems stripped"},
+        {amount:"1 splash", item:"white wine vinegar", note:""},
+        {amount:"to taste", item:"salt & pepper", note:""}
+      ],
+      steps:[
+        {emoji:"🔄", title:"Same as Monday Meal 1 — Including the Kale",
+         text:"Exact same method: wilt 30g kale in a dry pan 60 sec, mash avocado, poach eggs 3 min in vinegar water, toast the rye. Sauerkraut cold on the side.",
+         bullets:["By Friday this should take exactly 10 minutes.","Kale is non-negotiable — it is part of the documented Bond breakfast."]}
+      ]},
+
+    { time:"09:30–10:00", label:"Meal 2 · Post-Gym Shake", name:"Bond Performance Shake",
+      ingredients:[
+        {amount:"120g", item:"Banana", note:"frozen preferred"},
+        {amount:"30g", item:"Pea Protein Powder", note:""},
+        {amount:"40g", item:"Billa Bio Babyspinat", note:""},
+        {amount:"250ml", item:"Oatly Hafermilch", note:""},
+        {amount:"10g", item:"Billa Bio Chia Samen", note:""},
+        {amount:"handful", item:"ice", note:""}
+      ],
+      steps:[
+        {emoji:"🌀", title:"Blend — Standard Protocol",
+         text:"Liquid → spinach → banana → protein → chia → ice. Blend 45 seconds. Drink within 20–30 min post-workout. This is your 5th shake of the week — you know the drill.",
+         bullets:[]}
+      ]},
+
+    { time:"12:30–13:00", label:"Meal 3 · Theme Brunch", name:"Seared Lean Beef Salad",
+      ingredients:[
+        {amount:"100g", item:"Rindfleisch mager", note:"lean beef strips — Billa Bio Rindsfilet or Tafelspitz"},
+        {amount:"100g", item:"Billa Bio Salatmischung", note:"mixed salad"},
+        {amount:"5g", item:"Sesamkörner", note:"sesame seeds"},
+        {amount:"5g", item:"Sojasauce", note:"low sodium"},
+        {amount:"3g", item:"Rapso Rapsöl", note:"for the pan"},
+        {amount:"to taste", item:"black pepper", note:""}
+      ],
+      steps:[
+        {emoji:"🔪", title:"Prep the Beef",
+         text:"Slice beef into thin strips, 5mm thick, cutting AGAINST the grain. This shortens the muscle fibers and makes even a lean cut tender.",
+         bullets:["Pat completely dry with paper towels. Wet meat steams; dry meat sears.","Season with black pepper on both sides. No salt yet — salt draws out moisture."]},
+        {emoji:"🔥", title:"The Sear — High Heat, Fast",
+         text:"Heat a dry pan (no oil) over the highest heat your stove produces. Wait until it's very hot — you can feel the heat 10cm above the surface.",
+         bullets:["Add 3g oil. Wait 20 more seconds.","Add beef strips in a single layer. They should sizzle aggressively.","DO NOT TOUCH for 90 seconds. Flip. Cook 90 more seconds. Remove.","They should be browned on the outside, pink inside. Season with a pinch of salt now that they're off the heat.","Rest 2 minutes."]},
+        {emoji:"🥗", title:"Assemble",
+         text:"Arrange salad in a bowl. Add beef strips. Drizzle soy sauce and Rapso oil. Scatter sesame seeds.",
+         bullets:["Eat. Then take your 20-minute Athlete's Nap."]}
+      ]},
+
+    { time:"15:00–15:30", label:"Meal 4 · Fuel", name:"Walnuts & Goji Berries",
+      ingredients:[
+        {amount:"20g", item:"Billa Bio Walnüsse", note:"raw"},
+        {amount:"10g", item:"Billa Bio Gojibeeren", note:"goji berries"}
+      ],
+      steps:[
+        {emoji:"🫐", title:"Simple Protocol",
+         text:"Combine in a small bowl. Eat slowly. Goji berries provide a clean sugar hit alongside the fats and protein in walnuts — a complete mini fuel stop.",
+         bullets:[]}
+      ]},
+
+    { time:"18:00–19:00", label:"Meal 5 · Performance", name:"Venison Steak & Quinoa",
+      ingredients:[
+        {amount:"150g", item:"Hirschsteak", note:"venison — Billa/Spar seasonal. Substitute: lean Rindfleisch (beef) or Bison"},
+        {amount:"75g dry", item:"Billa Bio Quinoa Tricolore", note:"→ yields ≈150g cooked"},
+        {amount:"100g", item:"Billa Bio Babyspinat", note:"fresh spinach"},
+        {amount:"5g", item:"Rapso Rapsöl", note:""},
+        {amount:"½ tsp", item:"Wacholderbeeren", note:"juniper berries — crushed. Classic venison pairing"},
+        {amount:"½", item:"Lemon", note:""},
+        {amount:"to taste", item:"flaky sea salt & black pepper", note:""}
+      ],
+      steps:[
+        {emoji:"🌾", title:"Cook Quinoa (Same Method as Monday)",
+         text:"Rinse 75g quinoa. Add to saucepan with 150ml water + pinch salt. Boil, drop to lowest heat, lid on, 12 minutes. Off heat, lid on, 5 minutes rest. Fluff.",
+         bullets:[]},
+        {emoji:"🥩", title:"Prep the Steak",
+         text:"Remove venison from fridge 15 minutes before cooking. Cold meat directly in a hot pan cooks unevenly.",
+         bullets:["Pat completely dry — this is critical for a proper sear.","Season generously on both sides: salt, black pepper, and crushed juniper berries.","Crush juniper berries by pressing with the flat of a knife."]},
+        {emoji:"🔥", title:"Sear the Venison",
+         text:"Venison is extremely lean — it overcooks fast. You want medium-rare.",
+         bullets:["Heat pan over very high heat. Add 5g oil.","Sear steak 2–3 minutes per side for medium-rare. 3–4 for medium.","Do not press down on the steak.","Remove from heat. REST for 5 full minutes — non-negotiable. Cutting too early loses all the juice.","Slice at a diagonal angle across the grain."]},
+        {emoji:"🌿", title:"Wilt the Spinach",
+         text:"In the same pan (off main heat, residual heat only), add the spinach. Toss for 60–90 seconds until just wilted. Squeeze lemon juice over.",
+         bullets:[]},
+        {emoji:"🍱", title:"Plate",
+         text:"Quinoa base. Wilted spinach. Sliced venison arranged on top. Garnish with a small squeeze of lemon and flaky sea salt.",
+         bullets:[]}
+      ]},
+
+    { time:"20:30–21:00", label:"Meal 6 · Sleep Prep", name:"Beef Bone Broth",
+      ingredients:[
+        {amount:"300ml", item:"Billa Bio Rinderbrühe", note:"beef bone broth — or Billa Knochenbrühe"},
+        {amount:"pinch", item:"Meersalz", note:"flaky sea salt"},
+        {amount:"optional: 3g", item:"fresh Kurkuma", note:"or a pinch of turmeric powder + black pepper"}
+      ],
+      steps:[
+        {emoji:"🦴", title:"Method",
+         text:"Heat broth gently until steaming. Do not boil. Season with sea salt. Add turmeric and black pepper if using.",
+         bullets:["Pour into a mug. Sip slowly, 90–120 minutes before bed.","Bone broth contains glycine — an amino acid shown to improve sleep quality and reduce time to fall asleep. This is not optional on red meat Friday."]}
+      ]}
+  ]},
+
+  0: { theme: "Wellness Weekend (Sat & Sun)", meals: [
+    { time:"08:30–09:30", label:"Meal 1 · Wellness Breakfast", name:"Oatmeal with Seeds & Berries",
+      ingredients:[
+        {amount:"50g", item:"Billa Bio Haferflocken", note:"rolled oats — not instant"},
+        {amount:"150ml", item:"water or Oatly Hafermilch", note:"milk makes it creamier"},
+        {amount:"50g", item:"mixed Beeren", note:"Billa Bio — fresh or thawed frozen"},
+        {amount:"10g", item:"Billa Bio Chia Samen", note:""},
+        {amount:"optional", item:"raw Honig", note:"1 tsp — Billa Bio"},
+        {amount:"optional", item:"Zimt", note:"cinnamon — a pinch"}
+      ],
+      steps:[
+        {emoji:"🥣", title:"The Oatmeal",
+         text:"Combine oats and liquid in a small saucepan. Medium heat. Stir continuously for 3–5 minutes until thick and creamy. The consistency should coat the back of a spoon.",
+         bullets:["If too thick: add a splash of oat milk.","If using just water: season with a pinch of salt — it makes a surprising difference."]},
+        {emoji:"🫐", title:"Assemble",
+         text:"Pour into a bowl. Top with berries and chia seeds. Optional drizzle of honey and a pinch of cinnamon.",
+         bullets:["This is a wellness meal — enjoy it slowly. No rush on weekends."]}
+      ]},
+
+    { time:"11:00–12:00", label:"Meal 2 · Refuel", name:"Protein Shake",
+      ingredients:[
+        {amount:"30g", item:"Protein Powder", note:"any — plant or whey"},
+        {amount:"250ml", item:"water or oat milk", note:""}
+      ],
+      steps:[
+        {emoji:"🥤", title:"Shake",
+         text:"Combine in a shaker bottle or blend briefly. Drink. Simple.",
+         bullets:["Weekend is wellness mode — lighter, no strict timing required."]}
+      ]},
+
+    { time:"13:30–14:30", label:"Meal 3 · Social", name:"Mediterranean Mezze",
+      ingredients:[
+        {amount:"100g", item:"Billa Bio Hummus", note:"store-bought is fine"},
+        {amount:"50g", item:"Billa Oliven", note:"mixed olives"},
+        {amount:"1 piece", item:"Pitabrot or Fladenbrot", note:"Billa — warm in oven 3 min"},
+        {amount:"2", item:"Tomaten", note:"diced"},
+        {amount:"½", item:"Gurke", note:"sliced"},
+        {amount:"¼", item:"red Zwiebel", note:"thinly sliced"},
+        {amount:"5g", item:"Olivenöl", note:""},
+        {amount:"5g", item:"Zitronensaft", note:""}
+      ],
+      steps:[
+        {emoji:"🫙", title:"Assemble",
+         text:"Warm pita in oven at 180°C for 3 minutes. Arrange hummus, olives, and a simple tomato-cucumber-red onion salad dressed with olive oil and lemon juice.",
+         bullets:["This is a social, wellness meal. If eating with family or friends: this is your choice day. Enjoy it. No guilt.","No alcohol. That rule does not have a weekend exception."]}
+      ]},
+
+    { time:"16:00–17:00", label:"Meal 4 · Fuel", name:"Fresh Seasonal Fruit",
+      ingredients:[
+        {amount:"150g", item:"seasonal fresh fruit", note:"whatever looks best at the market"}
+      ],
+      steps:[
+        {emoji:"🍊", title:"Simple",
+         text:"Wash and eat. This meal exists to maintain your 6-meal-per-day pattern over the weekend.",
+         bullets:[]}
+      ]},
+
+    { time:"19:00–20:30", label:"Meal 5 · Performance", name:"Restaurant Quality Meal",
+      ingredients:[
+        {amount:"your choice", item:"High-quality protein", note:"fish, poultry, lean meat, or plant protein"},
+        {amount:"your choice", item:"Vegetables", note:"at least ½ the plate"},
+        {amount:"your choice", item:"Complex carbs", note:"optional — depends on energy level"}
+      ],
+      steps:[
+        {emoji:"🍽️", title:"The Weekend Meal",
+         text:"This is either a home-cooked quality meal or a restaurant. The rules are simple:",
+         bullets:["High-quality protein is the anchor of the plate.","At least half the plate is vegetables.","No alcohol. Your REM sleep is built or destroyed by this decision.","If eating out in Wiener Neustadt: Restaurant Marchfelderhof, Gschwandtner, or any quality Gasthaus are good options."]}
+      ]},
+
+    { time:"21:30–22:00", label:"Meal 6 · Sleep Prep", name:"Camomile Tea or Miso Soup",
+      ingredients:[
+        {amount:"1 bag", item:"Billa Bio Kamillentee", note:"camomile tea"},
+        {amount:"OR", item:"Miso Soup", note:"as per Tuesday Meal 6 method"},
+        {amount:"200ml", item:"hot water", note:"just off the boil"}
+      ],
+      steps:[
+        {emoji:"🍵", title:"The Sleep Ritual",
+         text:"Steep camomile tea 5 minutes. Dim the lights in your home while you do this. The ritual of preparation signals your nervous system to begin winding down.",
+         bullets:["Camomile contains apigenin — a compound that binds to GABA receptors in the brain and promotes relaxation and sleep onset.","Put your phone in another room. Screens are the enemy of your REM cycle."]}
+      ]}
+  ]}
+};
+
+// ─── GROCERY DATA ──────────────────────────────────────────────
+const grocery = [
+  { cat:"🥬 FRESH PRODUCE", note:"Buy twice a week — Mon & Thu. Cannot be stored for 2–3 weeks.", items:[
+    {item:"Avocados", brand:"Billa/Spar (Bio preferred)", w1:"3 pcs", w2:"6 pcs", w3:"9 pcs", storage:"Buy firm, ripen at home in 2–3 days. Once ripe: use within 2 days.", store:"Billa"},
+    {item:"Baby Spinach (Babyspinat)", brand:"Billa Bio 200g bag", w1:"2 bags", w2:"4 bags", w3:"6 bags", storage:"Fridge, 4–5 days max once opened.", store:"Billa"},
+    {item:"Kale (Grünkohl)", brand:"Billa Bio, fresh bunch", w1:"1 bunch", w2:"2 bunches", w3:"3 bunches", storage:"Fridge 5–6 days. Wash only before use.", store:"Billa"},
+    {item:"Zucchini", brand:"any, Billa", w1:"1 medium", w2:"2 pcs", w3:"3 pcs", storage:"Fridge up to 7 days.", store:"Billa, Spar, Hofer, Lidl or Penny"},
+    {item:"Bell Peppers (Paprika)", brand:"Billa — red or yellow", w1:"2 pcs", w2:"4 pcs", w3:"6 pcs", storage:"Fridge 5–7 days.", store:"Billa"},
+    {item:"Sweet Potato (Süßkartoffel)", brand:"Billa", w1:"1 medium (130g)", w2:"2 pcs", w3:"3 pcs", storage:"Cool dark place (not fridge). Up to 2 weeks.", store:"Billa"},
+    {item:"Broccoli", brand:"Billa Bio", w1:"1 head", w2:"2 heads", w3:"3 heads", storage:"Fridge 4–5 days.", store:"Billa, Spar, Hofer or Lidl"},
+    {item:"Carrots (Karotten)", brand:"Billa Bio", w1:"4 pcs", w2:"8 pcs", w3:"12 pcs", storage:"Fridge up to 3 weeks.", store:"Billa"},
+    {item:"Parsnips (Pastinaken)", brand:"Billa", w1:"2 pcs", w2:"4 pcs", w3:"6 pcs", storage:"Fridge up to 2 weeks.", store:"Billa"},
+    {item:"Mixed Salad (Salatmischung)", brand:"Billa Bio 100g bag", w1:"2 bags", w2:"4 bags", w3:"buy weekly", storage:"Fridge 3 days once opened.", store:"Billa"},
+    {item:"Tomatoes", brand:"Billa — vine tomatoes", w1:"4 pcs", w2:"8 pcs", w3:"12 pcs", storage:"Room temp (never fridge). 5–7 days.", store:"Billa, Spar, Hofer, Lidl or Penny"},
+    {item:"Cucumber (Gurke)", brand:"Billa Bio", w1:"1 pc", w2:"2 pcs", w3:"3 pcs", storage:"Fridge 7 days.", store:"Billa"},
+    {item:"Bananas", brand:"Billa Bio", w1:"6–7 pcs", w2:"13 pcs", w3:"buy weekly — they ripen fast", storage:"Peel ripe bananas, freeze in zip bags for shakes.", store:"Billa, Spar, Hofer, Lidl or Penny"},
+    {item:"Apples", brand:"any variety — Billa", w1:"3 pcs", w2:"6 pcs", w3:"buy weekly", storage:"Fridge up to 3 weeks.", store:"Billa, Spar, Hofer, Lidl or Penny"},
+    {item:"Pears", brand:"Billa", w1:"2 pcs", w2:"4 pcs", w3:"buy weekly — ripen fast", storage:"Room temp until ripe, then fridge 3 days.", store:"Billa, Spar, Hofer, Lidl or Penny"},
+    {item:"Lemons", brand:"Billa Bio", w1:"5 pcs", w2:"10 pcs", w3:"15 pcs", storage:"Fridge up to 3 weeks.", store:"Billa, Spar, Hofer, Lidl or Penny"},
+    {item:"Fresh Ginger (Ingwer root)", brand:"Billa Bio", w1:"150g", w2:"200g", w3:"300g — freeze extras", storage:"Freeze whole roots. Grate from frozen — easier.", store:"Billa"},
+    {item:"Fresh Turmeric (Kurkuma root)", brand:"Billa Bio Kurkuma Wurzel (produce) — or Billa Bio Kurkuma gemahlen 40g jar as backup", w1:"50g", w2:"100g", w3:"150g — freeze whole roots", storage:"Freeze whole roots. Grate from frozen. Stains — use gloves.", store:"Billa, Spar, Hofer or Lidl"},
+    {item:"Garlic (Knoblauch)", brand:"Billa", w1:"1 head", w2:"2 heads", w3:"3 heads", storage:"Cool dark dry place. 3–4 weeks.", store:"Billa"},
+    {item:"Spring Onions (Frühlingszwiebeln)", brand:"Billa", w1:"1 bunch", w2:"2 bunches", w3:"3 bunches", storage:"Fridge 5 days.", store:"Billa"},
+    {item:"Mixed Berries (Beeren)", brand:"Billa Bio frozen 500g", w1:"1 bag", w2:"2 bags", w3:"3 bags", storage:"Freezer — indefinite. Take out what you need.", store:"Billa"}
+  ]},
+  { cat:"🍞 BREAD & GRAINS", note:"Pantry staples. Buy in quantity.", items:[
+    {item:"Roggenbrot (Rye Bread)", brand:"Billa Bio Roggenbrot or Merkur", w1:"1 large loaf", w2:"2 loaves — freeze 2nd", w3:"3 loaves — freeze 2 & 3", storage:"Slice entire loaf immediately. Freeze in portions. Toast from frozen.", store:"Billa"},
+    {item:"Sauerteigbrot (Sourdough)", brand:"Billa Bäckerei Sauerteigbrot — baked fresh in-store daily", w1:"1 loaf", w2:"2 loaves — freeze", w3:"3 loaves — freeze", storage:"Slice and freeze same as Roggenbrot.", store:"Billa or Spar (in-store bakery counter)"},
+    {item:"Quinoa Tricolore", brand:"Billa Bio Quinoa Tricolore 500g — confirmed Billa Plus. Also Billa and Spar", w1:"200g (⅖ bag)", w2:"400g", w3:"1 full 500g bag + 100g", storage:"Pantry, airtight container. 12 months.", store:"Billa Plus, Billa or Spar"},
+    {item:"Rote Linsen (Red Lentils)", brand:"Billa Bio 400g", w1:"60g", w2:"120g", w3:"180g", storage:"Pantry, airtight. 12+ months.", store:"Billa"},
+    {item:"Haferflocken (Rolled Oats)", brand:"Billa Bio 500g", w1:"50g", w2:"100g", w3:"150g", storage:"Pantry, airtight. 6–12 months.", store:"Billa"},
+    {item:"Vollkornreis (Brown Rice)", brand:"Billa Bio 500g", w1:"25g", w2:"50g", w3:"75g", storage:"Pantry, airtight. 6–12 months.", store:"Billa"},
+    {item:"Pitta / Fladenbrot", brand:"Billa", w1:"1 pack", w2:"1 pack", w3:"2 packs — freeze", storage:"Freeze and toast from frozen.", store:"Billa, Spar or Hofer"}
+  ]},
+  { cat:"🥚 DAIRY & EGGS", note:"Eggs last 3–4 weeks in fridge. Yogurt: check date.", items:[
+    {item:"Freilandeier (Free-range Eggs)", brand:"Billa Bio Freilandeier 12er", w1:"1 dozen (12)", w2:"2 dozen", w3:"3 dozen", storage:"Fridge. Up to 4 weeks. Test freshness: float in water = bad.", store:"Billa"},
+    {item:"Halloumi 200g", brand:"Billa or Spar", w1:"1 pack (use 60g, keep rest)", w2:"1 pack", w3:"2 packs", storage:"Fridge. Unopened: 2–3 weeks. Opened: 3–4 days in water.", store:"Billa, Spar or Billa Plus"},
+    {item:"Griechischer Joghurt", brand:"Billa Bio, 10% fat", w1:"1×150g pot", w2:"2 pots", w3:"3 pots", storage:"Fridge. 1 week once opened.", store:"Billa, Spar, Hofer or Lidl"}
+  ]},
+  { cat:"🐟 FISH — RIOMARE TUNA ONLY", note:"You eat only Rio Mare tuna. Buy in bulk — pantry shelf stable.", items:[
+    {item:"Rio Mare Tonno al Naturale (in water)", brand:"Rio Mare Tonno al Naturale 160g — Billa and Spar (canned fish aisle)", w1:"5 tins (Tue: 3 meals × 2 tins each = 6 — round to 5)", w2:"10 tins", w3:"15 tins — stock up, pantry stable 2+ years", storage:"Pantry. Indefinite until opened. Once opened: fridge, eat same day.", store:"Billa, Spar or Hofer"},
+    {item:"Rio Mare Tonno al Naturale 4-pack", brand:"Rio Mare Multipack 4×160g — Billa and Spar (canned fish aisle)", w1:"1 multipack", w2:"2 multipacks", w3:"3 multipacks — stock entire pantry shelf", storage:"Pantry until opened. Best before typically 3–5 years.", store:"Billa, Spar or Hofer"}
+  ]},
+  { cat:"🍗 MEAT (white & red)", note:"Buy fresh weekly or freeze portions on shopping day.", items:[
+    {item:"Puten-Faschiertes (Ground Turkey)", brand:"Billa Pute", w1:"100g pack", w2:"200g", w3:"300g — freeze in 100g portions", storage:"Fridge 2 days. Freeze immediately on shopping day.", store:"Billa"},
+    {item:"Putenfiletsteak (Turkey Fillet)", brand:"Billa", w1:"150g", w2:"300g", w3:"450g — freeze", storage:"Fridge 2 days. Freeze in 150g portions.", store:"Billa"},
+    {item:"Hühnchenbrust (Chicken Breast)", brand:"Billa Bio", w1:"200g (use 100g)", w2:"400g", w3:"600g — freeze", storage:"Fridge 2 days. Freeze in 100g portions.", store:"Billa"},
+    {item:"Rindfleisch mager (Lean Beef)", brand:"Billa Bio Rindsfilet or Tafelspitz strips", w1:"100g", w2:"200g", w3:"300g — freeze", storage:"Fridge 2–3 days. Freeze in 100g strips.", store:"Billa"},
+    {item:"Hirschsteak (Venison)", brand:"Billa Bio Wildfleisch counter (Oct–Jan seasonal) — off-season: Billa Bio Rindsfilet as substitute", w1:"150g", w2:"300g", w3:"450g — freeze", storage:"Fridge 2 days. Freeze portions. Substitute: lean Rindsfilet if not available.", store:"Billa or Spar (game counter, seasonal)"}
+  ]},
+  { cat:"🌱 PLANT PROTEINS & TOFU", note:"Tofu: check dates. Canned chickpeas: pantry staple.", items:[
+    {item:"Vega Vita Bio-Tofu fest (2×175g)", brand:"Billa — green pack", w1:"1 pack (150g used)", w2:"1 pack", w3:"2 packs", storage:"Fridge. Opened: submerge in fresh water, change daily, use within 3–4 days.", store:"Billa"},
+    {item:"Seidentofu (Silk Tofu)", brand:"Vega Vita Bio Seidentofu 400g — Billa chilled section (same brand as firm tofu)", w1:"1 pack 300g (30g used)", w2:"1 pack", w3:"2 packs", storage:"Fridge. Use within 3 days once opened.", store:"Billa (chilled section)"},
+    {item:"Kichererbsen canned (Chickpeas)", brand:"Billa Bio 400g can", w1:"1 can (100g used)", w2:"1 can", w3:"2 cans", storage:"Pantry unopened. Once opened: fridge, use within 3 days.", store:"Billa"},
+    {item:"Protein Powder ⚠️ SAFETY NOTE BELOW", brand:"Optimum Nutrition Gold Standard Whey Isolate 908g (vanilla/unflavoured) — dm or BiPA. Backup: Layenberger LowCarb.one Whey — dm. Wednesday only: Spar Free From Pea Protein (vanilla) — Spar", w1:"210g (7 shakes×30g)", w2:"420g", w3:"1×908g tub = ~30 servings, covers 4 weeks", storage:"Pantry, sealed, 18 months. Check for Informed Sport or NSF certification logo on pack.", store:"dm or BiPA (primary) — Spar for plant-based Wed option"}
+  ]},
+  { cat:"🫙 PANTRY STAPLES", note:"Buy in large quantities — all last months.", items:[
+    {item:"Hengstenberg Sauerkraut (live)", brand:"Refrigerated jar — NOT shelf-stable canned", w1:"1×500g jar", w2:"1×500g jar", w3:"2×500g jars", storage:"Fridge. Opened: lasts 3–4 weeks in fridge in its brine.", store:"Billa chilled section"},
+    {item:"Rapso Rapsöl (Canola oil)", brand:"Rapso 750ml", w1:"750ml covers 6–8 weeks", w2:"same bottle", w3:"same bottle + 1 backup", storage:"Pantry. 12 months.", store:"Billa"},
+    {item:"Sojasauce low sodium", brand:"Kikkoman reduced sodium", w1:"1 bottle = 6–8 weeks", w2:"same", w3:"same", storage:"Pantry. Once opened: fridge or pantry. 12+ months.", store:"Billa, Spar or Hofer"},
+    {item:"Manuka Honey (Manukahonig)", brand:"Billa Bio Akazienhonig (raw acacia honey) — same anti-inflammatory benefit, available year-round", w1:"1 jar = 4–6 weeks", w2:"same", w3:"2 jars", storage:"Pantry. Indefinite.", store:"Billa"},
+    {item:"Kefir (live fermented yoghurt)", brand:"Billa Bio Kefir 500ml — dairy section", w1:"2 bottles (200ml/day × 7)", w2:"4 bottles", w3:"buy weekly — 3 days shelf life once opened", storage:"Fridge. 7–10 days unopened. Drink within 3 days of opening.", store:"Billa, Spar or dm"},
+    {item:"Weizengras (Wheatgrass) — shots or powder", brand:"Lebepur Bio Gerstengras Pulver 125g — confirmed at dm. Billa does NOT stock this.", w1:"1 bag", w2:"2 bags", w3:"3 bags — powder lasts 12 months", storage:"Powder: pantry sealed, 12 months.", store:"dm (Lebepur Bio Gerstengras — dm only, not at Billa)"},
+    {item:"Sesamöl (Sesame oil)", brand:"Billa Bio Sesamöl 100ml — international aisle, or Spar Bio Sesamöl", w1:"1 small bottle = 2–3 months", w2:"same", w3:"same", storage:"Pantry. Use sparingly — finishing oil only.", store:"Billa or Spar (international/Asian aisle)"},
+    {item:"Oatly Hafermilch 1L (UHT)", brand:"Oatly or Alpro Hafer", w1:"2 cartons", w2:"4 cartons", w3:"6 cartons", storage:"Pantry until opened. Fridge once opened, 5 days.", store:"Billa/Spar"},
+    {item:"Billa Bio Gemüsebrühe", brand:"Billa Bio 500ml carton or cubes", w1:"1 carton (300ml used)", w2:"2 cartons", w3:"3 cartons", storage:"Pantry. Opened: fridge 5 days.", store:"Billa, Spar, Hofer or Lidl"},
+    {item:"Billa Bio Hühnerbrühe", brand:"Billa Bio clear broth", w1:"1 carton", w2:"2 cartons", w3:"3 cartons", storage:"Same as above.", store:"Billa, Spar or Hofer"},
+    {item:"Billa Bio Rinderbrühe / Knochenbrühe", brand:"Billa Bio 500ml", w1:"1 carton", w2:"2 cartons", w3:"3 cartons", storage:"Pantry. Opened: fridge 5 days.", store:"Billa, Spar or Hofer"},
+    {item:"Shiro Miso Paste (White Miso)", brand:"Miyako Miso-Suppenpaste hell 300g — Billa (international/Asian aisle). This IS white/shiro miso.", w1:"200g tub = 3–4 weeks", w2:"same", w3:"1 tub = enough for whole period", storage:"Fridge. Lasts months once opened.", store:"Billa or Spar (Miyako brand — international aisle)"},
+    {item:"Sushi-Ingwer (Pickled Ginger)", brand:"Billa or Spar sushi accompaniments — small jar near pre-made sushi rolls", w1:"1 jar (30g used)", w2:"same jar", w3:"same jar", storage:"Fridge. Lasts months.", store:"Billa or Spar (sushi section)"}
+  ]},
+  { cat:"🥜 NUTS, SEEDS & DRIED FRUIT", note:"Buy in bulk — all last months in a sealed container.", items:[
+    {item:"Walnüsse (Walnuts)", brand:"Billa Bio 200g bag", w1:"45g", w2:"90g", w3:"1 full 200g bag", storage:"Sealed bag, pantry or fridge. 3–6 months.", store:"Billa"},
+    {item:"Mandeln (Almonds)", brand:"Billa Bio 200g bag", w1:"20g", w2:"40g", w3:"60g", storage:"Pantry, sealed. 3–6 months.", store:"Billa"},
+    {item:"Cashews (Cashewkerne)", brand:"Billa Bio 200g bag", w1:"35g", w2:"70g", w3:"1×200g bag", storage:"Pantry, sealed. 3–6 months.", store:"Billa"},
+    {item:"Kürbiskerne (Pumpkin Seeds)", brand:"Billa Bio 200g bag", w1:"25g", w2:"50g", w3:"75g", storage:"Pantry, sealed. 3–6 months.", store:"Billa"},
+    {item:"Gojibeeren (Goji Berries)", brand:"Billa Bio 100g bag or dm Bio Gojibeeren", w1:"80g (shake daily 10g×7 + snack)", w2:"160g", w3:"240g — 1 full 200g bag", storage:"Pantry, sealed. 6–12 months.", store:"Billa, Spar or dm"},
+    {item:"Chia Samen (Chia Seeds)", brand:"Billa Bio 200g bag or Hofer Bio Chia (seasonal)", w1:"70g (shake + extra)", w2:"140g", w3:"200g — 1 full bag", storage:"Pantry, sealed. 12+ months.", store:"Billa, Spar, Hofer or dm"},
+    {item:"Hanfsamen (Hemp Seeds)", brand:"dmBio Hanfsamen geschält 400g — confirmed at dm shelves", w1:"70g (shake daily 10g×7)", w2:"140g", w3:"200g — 1 bag", storage:"Pantry, sealed. 6–12 months.", store:"dm (not at Billa — confirmed dmBio only)"},
+    {item:"Maca Wurzelpulver (Maca Root Powder)", brand:"dmBio Maca Pulver 150g — dm. Not reliably found at Billa/Spar. Online backup: KoRo.de", w1:"35g (shake daily 5g×7)", w2:"70g", w3:"105g — 1 small bag = 1 month", storage:"Pantry, sealed. 12+ months.", store:"dm (not reliably at Billa or Spar)"},
+    {item:"Sesamkörner (Sesame Seeds)", brand:"Billa or Kotányi", w1:"10g", w2:"20g", w3:"1×100g bag", storage:"Pantry, sealed. 6–12 months.", store:"Billa, Spar, Hofer or Lidl"}
+  ]},
+  { cat:"🌿 SPICES & CONDIMENTS", note:"One purchase covers months. Check your cupboard first.", items:[
+    {item:"Kotányi Little Italy (Kräutermischung)", brand:"Kotányi — any Austrian supermarket", w1:"1 jar", w2:"same", w3:"same + 1 backup", storage:"Pantry. 12–24 months.", store:"Billa/Spar"},
+    {item:"Paprika edelsüß", brand:"Kotányi or Billa Bio", w1:"1 jar", w2:"same", w3:"same", storage:"Pantry. 12–24 months.", store:"Billa, Spar, Hofer, Lidl or Penny"},
+    {item:"Kurkuma gemahlen (Turmeric powder)", brand:"Billa Bio or Kotányi", w1:"1 jar", w2:"same", w3:"same", storage:"Pantry. 24 months.", store:"Billa"},
+    {item:"Kreuzkümmel (Ground Cumin)", brand:"Kotányi", w1:"1 jar", w2:"same", w3:"same", storage:"Pantry. 24 months.", store:"Billa"},
+    {item:"Wacholderbeeren (Juniper Berries)", brand:"Kotányi", w1:"1 small bag", w2:"same", w3:"same", storage:"Pantry. 24 months.", store:"Billa"},
+    {item:"Thymian getrocknet (Dried Thyme)", brand:"Kotányi", w1:"1 jar", w2:"same", w3:"same", storage:"Pantry. 24 months.", store:"Billa"},
+    {item:"Chiliflocken (Chili Flakes)", brand:"Kotányi", w1:"1 jar", w2:"same", w3:"same", storage:"Pantry. 24 months.", store:"Billa"},
+    {item:"Meersalz (Sea Salt) + flaky salt", brand:"Billa Bio + Maldon", w1:"1 container", w2:"same", w3:"same", storage:"Pantry. Indefinite.", store:"Billa"},
+    {item:"Schwarzer Pfeffer (Black Pepper)", brand:"Kotányi — whole peppercorns, grind fresh", w1:"1 grinder", w2:"same", w3:"same + 1 refill", storage:"Pantry. 24 months.", store:"Billa"},
+    {item:"White wine vinegar (for poaching eggs)", brand:"any", w1:"1 bottle = months of supply", w2:"same", w3:"same", storage:"Pantry. Indefinite.", store:"Billa"}
+  ]},
+  { cat:"🍵 DRINKS & SUPPLEMENTS", note:"", items:[
+    {item:"Kamillentee (Camomile Tea)", brand:"Billa Bio Kamillentee", w1:"1 box (25 bags)", w2:"same", w3:"2 boxes", storage:"Pantry. 24 months.", store:"Billa"},
+    {item:"Rio Mare Tuna (extra stock)", brand:"Billa 4-pack — backup pantry supply", w1:"—", w2:"1 extra pack", w3:"2 extra packs", storage:"Pantry. No refrigeration needed.", store:"Billa, Spar or Hofer"},
+    {item:"Oliven (Mixed Olives)", brand:"Billa — deli counter or jar", w1:"50g weekend use", w2:"100g", w3:"150g", storage:"Fridge once opened. 2 weeks.", store:"Billa"},
+    {item:"Billa Bio Hummus", brand:"Billa Bio 200g", w1:"1 tub", w2:"2 tubs", w3:"3 tubs", storage:"Fridge. 5 days once opened.", store:"Billa or Spar"}
+  ]}
+];
+
+// ─── RENDER FUNCTIONS ──────────────────────────────────────────
+function showDay(day) {
+  if (!schedule[day]) return;
+  currentDay = day;
+  selectedMeal = null;
+
+  document.getElementById('grocery-view').classList.add('hidden');
+  document.getElementById('main-view').classList.remove('hidden');
+
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + day).classList.add('active');
+
+  const data = schedule[day];
+  document.getElementById('day-theme-name').textContent = data.theme;
+
+  let html = '';
+  data.meals.forEach((m, i) => {
+    html += `<div class="meal-card" id="mc-${i}" onclick="showRecipe(${i})">
+      <div class="meal-num">${i+1}</div>
+      <div class="meal-info">
+        <div class="meal-time-label">${m.time} — ${m.label}</div>
+        <div class="meal-name">${m.name}</div>
+        <div class="meal-click">View Full Recipe →</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('meal-cards-container').innerHTML = html;
+
+  document.getElementById('recipe-panel').innerHTML = `<div class="recipe-empty">
+    <div class="recipe-empty-icon">🍽️</div>
+    <div class="recipe-empty-text">Select a meal to view full recipe</div>
+  </div>`;
+}
+
+function showRecipe(idx) {
+  if (currentDay === null) return;
+  const meal = schedule[currentDay].meals[idx];
+
+  document.querySelectorAll('.meal-card').forEach((el, i) => {
+    el.classList.toggle('selected', i === idx);
+  });
+
+  let ingHtml = meal.ingredients.map(ing => `
+    <div class="ing-item">
+      <span class="ing-amount">${ing.amount}</span>
+      <span class="ing-name">${ing.item}</span>
+      ${ing.note ? `<span class="ing-note">${ing.note}</span>` : ''}
+    </div>`).join('');
+
+  let stepsHtml = meal.steps.map((s, i) => `
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-counter">${String(i+1).padStart(2,'0')}</div>
+        <div class="step-emoji-icon">${s.emoji}</div>
+        <div class="step-title">${s.title}</div>
+      </div>
+      <div class="step-body">
+        <div class="step-text">${s.text}</div>
+        ${s.bullets.length ? `<ul class="step-bullets">${s.bullets.map(b=>`<li>${b}</li>`).join('')}</ul>` : ''}
+      </div>
+    </div>`).join('');
+
+  document.getElementById('recipe-panel').innerHTML = `
+    <div class="recipe-header">
+      <div class="recipe-header-label">${meal.time} — ${meal.label}</div>
+      <div class="recipe-title">${meal.name}</div>
+      <div class="recipe-timing">⏱ Serving size calibrated for 82kg athlete build</div>
+      <span class="recipe-metric">82KG PRECISION PORTIONS</span>
+    </div>
+    <div class="recipe-body">
+      <div class="section-label">📦 Ingredients</div>
+      <div class="ingredients-grid">${ingHtml}</div>
+      <div class="section-label">👨‍🍳 Method</div>
+      <div class="steps-container">${stepsHtml}</div>
+    </div>`;
+}
+
+function showGrocery() {
+  document.getElementById('main-view').classList.add('hidden');
+  document.getElementById('grocery-view').classList.remove('hidden');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-grocery').classList.add('active');
+  renderGrocery();
+}
+
+function setWeek(n, btn) {
+  currentWeek = n;
+  document.querySelectorAll('.week-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGrocery();
+}
+
+// ─── STORE FILTER STATE ──────────────────────────────────────
+const ALL_STORES = ['Billa','Spar','Billa Plus','Hofer','Lidl','Penny','dm','BiPA'];
+let activeStores = new Set(ALL_STORES);
+
+function itemAvailable(storeStr) {
+  // An item is available if its store string mentions ANY active store
+  for (const s of activeStores) {
+    if (storeStr.includes(s)) return true;
+  }
+  return false;
+}
+
+function highlightStores(storeStr) {
+  // Bold the stores in the string that are currently active
+  let result = storeStr;
+  for (const s of ALL_STORES) {
+    if (storeStr.includes(s)) {
+      const isActive = activeStores.has(s);
+      result = result.replace(
+        new RegExp(s.replace('+','\\+'), 'g'),
+        isActive
+          ? `<strong style="color:var(--text)">${s}</strong>`
+          : `<span style="opacity:0.4">${s}</span>`
+      );
+    }
+  }
+  return result;
+}
+
+function toggleStore(chip) {
+  const store = chip.dataset.store;
+  if (activeStores.has(store)) {
+    activeStores.delete(store);
+    chip.classList.remove('on');
+  } else {
+    activeStores.add(store);
+    chip.classList.add('on');
+  }
+  renderGrocery();
+}
+
+function toggleAllStores(on) {
+  activeStores = on ? new Set(ALL_STORES) : new Set();
+  document.querySelectorAll('.store-chip').forEach(c => {
+    c.classList.toggle('on', on);
+  });
+  renderGrocery();
+}
+
+// ─── RENDER ──────────────────────────────────────────────────
+function renderGrocery() {
+  const wk = currentWeek;
+  const qtyKey = wk === 1 ? 'w1' : wk === 2 ? 'w2' : 'w3';
+  const filterActive = activeStores.size < ALL_STORES.length;
+
+  // Tally available vs missing
+  let totalItems = 0, missingItems = 0;
+  grocery.forEach(cat => cat.items.forEach(item => {
+    totalItems++;
+    if (!itemAvailable(item.store)) missingItems++;
+  }));
+
+  // Summary bar
+  const summaryEl = document.getElementById('shopSummary');
+  if (filterActive && activeStores.size > 0) {
+    summaryEl.style.display = 'flex';
+    const available = totalItems - missingItems;
+    summaryEl.innerHTML = `
+      <div class="shop-summary-stat">
+        <div class="shop-summary-label">Available at your stores</div>
+        <span>${available}</span>of ${totalItems} items
+      </div>
+      ${missingItems > 0 ? `
+      <div class="shop-summary-stat warn">
+        <div class="shop-summary-label">Not at your stores</div>
+        <span>${missingItems}</span>items — shown greyed out below
+      </div>` : `
+      <div class="shop-summary-stat" style="color:var(--green)">
+        ✅ You can get everything at your selected stores
+      </div>`}
+      <div class="shop-summary-stat" style="margin-left:auto; font-size:0.6rem; color:var(--muted); text-align:right">
+        ${[...activeStores].join(' · ')}
+      </div>`;
+  } else if (activeStores.size === 0) {
+    summaryEl.style.display = 'flex';
+    summaryEl.innerHTML = `<div style="color:#ff6b35; font-family:'DM Mono',monospace; font-size:0.72rem">⚠ No stores selected — all items shown as unavailable</div>`;
+  } else {
+    summaryEl.style.display = 'none';
+  }
+
+  let html = '';
+  grocery.forEach(cat => {
+    const visibleItems = cat.items;
+    const hasAnyAvailable = visibleItems.some(i => itemAvailable(i.store));
+    
+    // Skip entire category if everything unavailable AND we are filtering
+    // Actually: always show all categories, just grey out unavailable rows
+    html += `<div class="grocery-category">
+      <div class="cat-header">
+        <span class="cat-icon">${cat.cat.split(' ')[0]}</span>
+        <span class="cat-title">${cat.cat.split(' ').slice(1).join(' ')}</span>
+        ${cat.note ? `<span class="cat-badge">${cat.note}</span>` : ''}
+      </div>
+      <table class="grocery-table">
+        <thead><tr>
+          <th>Item</th>
+          <th>Austrian Brand</th>
+          <th>${wk}-Week Qty</th>
+          <th>Where to Buy</th>
+          <th>Storage</th>
+        </tr></thead>
+        <tbody>`;
+
+    visibleItems.forEach(item => {
+      const available = itemAvailable(item.store);
+      const isFresh = cat.note && cat.note.toLowerCase().includes('fresh');
+      const rowClass = (!available && filterActive) ? 'tr-missing' : 'tr-available';
+      html += `<tr class="${rowClass}">
+        <td class="td-item">${item.item}${isFresh ? `<br><span class="badge-fresh">🌿 BUY FRESH</span>` : ''}</td>
+        <td class="td-brand">${item.brand}</td>
+        <td class="td-qty">${item[qtyKey]}</td>
+        <td class="td-store">${filterActive ? highlightStores(item.store) : item.store}</td>
+        <td class="td-storage">${item.storage}</td>
+      </tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+  });
+
+  document.getElementById('grocery-tables').innerHTML = html;
+
+  // Refresh export preview if panel is open
+  if (document.getElementById('exportPanel') &&
+      document.getElementById('exportPanel').classList.contains('open')) {
+    updateExportPreview();
+  }
+  // Always update the count badge
+  if (document.getElementById('exportCount')) {
+    const wk2 = currentWeek;
+    const qk2 = wk2 === 1 ? 'w1' : wk2 === 2 ? 'w2' : 'w3';
+    const fa2 = activeStores.size < ALL_STORES.length && activeStores.size > 0;
+    let cnt = 0;
+    grocery.forEach(cat => cat.items.forEach(item => {
+      if (!fa2 || itemAvailable(item.store)) cnt++;
+    }));
+    document.getElementById('exportCount').textContent =
+      fa2 ? `${cnt} items from ${[...activeStores].join(', ')}` : `${cnt} items — all stores`;
+  }
+}
+
+
+// ─── EXPORT ───────────────────────────────────────────────────────────────
+let exportFmt = 'tick';
+
+function setExportFmt(fmt, btn) {
+  exportFmt = fmt;
+  document.querySelectorAll('.export-opt-btn').forEach(b => {
+    b.style.borderColor = '';
+    b.style.color = '';
+  });
+  btn.style.borderColor = 'var(--gold)';
+  btn.style.color = 'var(--text)';
+  updateExportPreview();
+}
+
+function toggleExportPanel() {
+  const panel = document.getElementById('exportPanel');
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open', !isOpen);
+  if (!isOpen) {
+    // Opening: reset all buttons, highlight first (tick)
+    document.querySelectorAll('.export-opt-btn').forEach(b => {
+      b.style.borderColor = '';
+      b.style.color = '';
+    });
+    exportFmt = 'tick';
+    document.getElementById('fmt-tick').style.borderColor = 'var(--gold)';
+    document.getElementById('fmt-tick').style.color = 'var(--text)';
+    updateExportPreview();
+  }
+}
+
+function buildExportLines() {
+  const wk = currentWeek;
+  const qtyKey = wk === 1 ? 'w1' : wk === 2 ? 'w2' : 'w3';
+  const filterActive = activeStores.size < ALL_STORES.length && activeStores.size > 0;
+  const storeLabel = filterActive
+    ? [...activeStores].join(' + ')
+    : 'All Stores';
+
+  const wkLabel = wk === 1 ? '1-Week' : wk === 2 ? '2-Week' : '3-Week';
+  const prefix = exportFmt === 'tick' ? '☐ ' : exportFmt === 'bullet' ? '• ' : '';
+  const dateStr = new Date().toLocaleDateString('de-AT', {day:'2-digit',month:'2-digit',year:'numeric'});
+
+  let lines = [];
+  lines.push(`🛒 PROJECT 007 — SHOPPING LIST`);
+  lines.push(`📅 ${dateStr}   |   📦 ${wkLabel} supply`);
+  lines.push(`🏪 ${storeLabel}`);
+  lines.push('');
+
+  let totalItems = 0;
+  grocery.forEach(cat => {
+    const available = cat.items.filter(item =>
+      !filterActive || itemAvailable(item.store)
+    );
+    if (available.length === 0) return;
+
+    // Category header
+    const catName = cat.cat.split(' ').slice(1).join(' ');
+    lines.push(`── ${catName.toUpperCase()} ──`);
+
+    available.forEach(item => {
+      const qty = item[qtyKey] || '—';
+      // Clean item name (remove ⚠️ safety note suffix)
+      const name = item.item.replace(' ⚠️ SAFETY NOTE BELOW','');
+      lines.push(`${prefix}${name}  [${qty}]`);
+      totalItems++;
+    });
+    lines.push('');
+  });
+
+  lines.push(`─────────────────────`);
+  lines.push(`${totalItems} items total`);
+  if (filterActive) lines.push(`Stores: ${storeLabel}`);
+  lines.push(`via Project 007 Nutrition System`);
+
+  return lines;
+}
+
+function updateExportPreview() {
+  const lines = buildExportLines();
+  document.getElementById('exportPreview').textContent = lines.join('\n');
+
+  // Update item count badge
+  const wk = currentWeek;
+  const qtyKey = wk === 1 ? 'w1' : wk === 2 ? 'w2' : 'w3';
+  const filterActive = activeStores.size < ALL_STORES.length && activeStores.size > 0;
+  let count = 0;
+  grocery.forEach(cat => cat.items.forEach(item => {
+    if (!filterActive || itemAvailable(item.store)) count++;
+  }));
+  document.getElementById('exportCount').textContent =
+    filterActive ? `${count} items from ${[...activeStores].join(', ')}` : `${count} items — all stores`;
+}
+
+function getExportText() {
+  return buildExportLines().join('\n');
+}
+
+async function doExportCopy(silent = false) {
+  try {
+    await navigator.clipboard.writeText(getExportText());
+  } catch(e) {
+    const ta = document.createElement('textarea');
+    ta.value = getExportText();
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+  if (!silent) {
+    const t = document.getElementById('expToast');
+    t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 2500);
+  }
+}
+
+async function doExportNotes() {
+  // iPhone Notes — copy to clipboard, user pastes. ☐ chars become tappable in Notes.
+  const t = document.getElementById('expToast');
+  try {
+    await navigator.clipboard.writeText(getExportText());
+  } catch(e) {
+    const ta = document.createElement('textarea');
+    ta.value = getExportText();
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+  t.textContent = '✅ Copied! Open Notes → New Note → Paste (☐ = tappable tick)';
+  t.style.display = 'block';
+  setTimeout(() => {
+    t.style.display = 'none';
+    t.textContent = '✅ Copied to clipboard!';
+  }, 4500);
+}
+
+function doExportWhatsApp() {
+  const text = encodeURIComponent(getExportText());
+  // Opens WhatsApp to send to yourself or choose a contact
+  window.open('https://api.whatsapp.com/send?text=' + text, '_blank');
+}
+
+function doExportEmail() {
+  const wk = currentWeek;
+  const wkLabel = wk === 1 ? '1-Week' : wk === 2 ? '2-Week' : '3-Week';
+  const filterActive = activeStores.size < ALL_STORES.length;
+  const storeStr = filterActive ? [...activeStores].join('+') : 'All Stores';
+  const dateStr = new Date().toLocaleDateString('de-AT', {day:'2-digit',month:'2-digit'});
+  const subject = encodeURIComponent(`🛒 007 Shopping List — ${wkLabel} — ${storeStr} — ${dateStr}`);
+  const body = encodeURIComponent(getExportText());
+  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+}
+
+// Auto-load current day (Saturday→Weekend)
+const today = new Date().getDay();
+showDay(today === 6 ? 0 : today);
+
+function toggleTonic(btn) {
+  const body = document.getElementById('tonic-body');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  btn.textContent = open ? 'Show Recipe ▾' : 'Hide Recipe ▴';
+}
+</script>
+</body>
+</html>
